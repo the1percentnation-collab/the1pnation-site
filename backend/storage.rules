@@ -1,0 +1,41 @@
+rules_version = '2';
+
+/* ============================================================
+   THE REWRITE METHOD — STORAGE RULES
+   ------------------------------------------------------------
+   Worksheets are readable only by an entitled member. Check-in
+   uploads are readable and writable only by the member who owns
+   them; a Week 4 mark photo is a personal disclosure, not content.
+============================================================ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEntitled(courseId) {
+      return isSignedIn() && exists(
+        /databases/(default)/documents/users/$(request.auth.uid)/enrollments/$(courseId)
+      ) && get(
+        /databases/(default)/documents/users/$(request.auth.uid)/enrollments/$(courseId)
+      ).data.get('status', 'active') != 'revoked';
+    }
+
+    /* ─── WORKSHEETS ─── */
+    match /courses/{courseId}/worksheets/{file} {
+      allow read: if isEntitled(courseId);
+      allow write: if false;                       // uploaded by an admin
+    }
+
+    /* ─── CHECK-IN UPLOADS ─── */
+    match /users/{uid}/checkins/{courseId}/{module}/{file} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isSignedIn() && request.auth.uid == uid
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isSignedIn() && request.auth.uid == uid;
+    }
+  }
+}

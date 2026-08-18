@@ -1,0 +1,67 @@
+rules_version = '2';
+
+/* ============================================================
+   THE REWRITE METHOD — FIRESTORE RULES
+   ------------------------------------------------------------
+   Deploy into the member portal project. These rules cover the
+   Rewrite Method collections only. Merge them into the portal's
+   existing rules file rather than replacing it.
+
+   Two things these rules must get right:
+     1. A member can never write their own entitlement.
+     2. Video provider IDs are never readable from the client.
+        They live in coursesPrivate/, which no client can read at
+        all, and are released one module at a time by the
+        getRewriteModuleVideos callable after a server-side
+        entitlement and unlock-date check.
+============================================================ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    /* Only these enrollment fields may ever be touched by the member.
+       purchasedAt, status, bundle and the Stripe IDs are server-owned. */
+    function memberWritableFields() {
+      return ['enrolledAt', 'checkins', 'reviewChoice', 'isRewriter', 'completedAt', 'updatedAt'];
+    }
+
+    /* ─── COURSE METADATA ───
+       Public read, and safe to be public: the module documents seeded
+       by the seed script carry titles, summaries, worksheet paths and
+       check-in field definitions, never provider IDs. */
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if false;                       // Admin SDK only
+
+      match /modules/{moduleId} {
+        allow read: if true;
+        allow write: if false;                     // Admin SDK only
+      }
+    }
+
+    /* ─── PRIVATE COURSE CONTENT ───
+       Video provider IDs. No client may read this, entitled or not.
+       The callable reads it with the Admin SDK, which bypasses rules. */
+    match /coursesPrivate/{courseId}/{document=**} {
+      allow read, write: if false;
+    }
+
+    /* ─── ENROLLMENTS ───
+       Created only by the Stripe webhook through the Admin SDK.
+       The member may update their own progress fields and nothing else. */
+    match /users/{uid}/enrollments/{courseId} {
+      allow read: if isOwner(uid);
+      allow create: if false;
+      allow delete: if false;
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data)
+             .affectedKeys().hasOnly(memberWritableFields())
+        // Entitlement cannot be self-restored after a refund.
+        && resource.data.get('status', 'active') != 'revoked';
+    }
+  }
+}

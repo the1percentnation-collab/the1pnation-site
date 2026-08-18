@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Rewrite Method | Module</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/rewrite-method.css">
+  <style>
+    .mod-head { padding:calc(var(--nav-h) + 48px) 0 26px; }
+    .mod-head h1 { margin:14px 0 10px; }
+    .layout { display:grid; grid-template-columns:1fr 340px; gap:34px; align-items:start; padding-bottom:90px; }
+    .video-block { margin-bottom:32px; }
+    .video-head {
+      display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:12px;
+    }
+    .video-title { font-family:var(--font-display); font-size:22px; letter-spacing:0.02em; text-transform:uppercase; }
+    .video-run { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; color:var(--gray-600); white-space:nowrap; }
+    .side { position:sticky; top:calc(var(--nav-h) + 24px); display:grid; gap:16px; }
+    .prevnext { display:flex; justify-content:space-between; gap:12px; padding-top:28px; border-top:1px solid var(--border); }
+    .checkin-done { border-left:2px solid #3FBF6A; }
+    .review-step { text-align:center; }
+    .review-step p { color:var(--gray-400); line-height:1.7; margin:12px 0 22px; }
+    .review-btns { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+    @media (max-width:900px) {
+      .layout { grid-template-columns:1fr; }
+      .side { position:static; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/assets/logo.jpg" alt="The One Percent Nation">
+      <span class="nav-logo-text">
+        <span class="l1">The One Percent</span>
+        <span class="l2">NATION</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="/rewrite-method/course" class="nav-back">&larr; All Weeks</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div id="s-loading" class="state"><p class="eyebrow">Loading</p></div>
+
+  <div id="s-signedout" class="state hidden">
+    <h1 class="display-md">Sign In to Continue</h1>
+    <p>This week lives inside your member account.</p>
+    <a class="btn-primary btn-lg" id="signin-link" href="#">Sign In &rarr;</a>
+  </div>
+
+  <div id="s-blocked" class="state hidden">
+    <h1 class="display-md" id="blocked-title">Not Open Yet</h1>
+    <p id="blocked-copy"></p>
+    <a class="btn-outline btn-lg" href="/rewrite-method/course">Back to All Weeks</a>
+  </div>
+
+  <div id="s-module" class="hidden">
+    <header class="mod-head">
+      <div class="container">
+        <span class="tag" id="mod-label">Week</span>
+        <h1 class="display-lg" id="mod-title"></h1>
+        <p class="lede" style="max-width:640px;" id="mod-summary"></p>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="layout">
+        <div>
+          <div id="videos"></div>
+
+          <!-- CHECK-IN -->
+          <section id="checkin-section" class="panel" style="margin-top:8px;">
+            <div class="eyebrow" style="margin-bottom:10px;">Check-in</div>
+            <p id="checkin-prompt" style="color:var(--gray-400); line-height:1.7; margin-bottom:22px;"></p>
+            <form id="checkin-form"></form>
+            <div id="checkin-msg" class="form-msg"></div>
+          </section>
+
+          <!-- WEEK 6 REVIEW STEP -->
+          <section id="review-section" class="panel review-step hidden" style="margin-top:16px;">
+            <div class="eyebrow">One ask</div>
+            <p id="review-copy"></p>
+            <div class="review-btns">
+              <button class="btn-primary" data-review="left_review">I left a review</button>
+              <button class="btn-outline" data-review="opted_out">Not right now</button>
+            </div>
+          </section>
+
+          <div class="prevnext">
+            <a class="btn-ghost" id="prev-link" href="/rewrite-method/course">&larr; Previous</a>
+            <a class="btn-ghost" id="next-link" href="/rewrite-method/course">Next &rarr;</a>
+          </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="side">
+          <div class="panel panel-quiet" id="worksheet-card">
+            <div class="eyebrow" style="margin-bottom:10px;">Worksheet</div>
+            <p id="worksheet-label" style="font-size:14px; color:var(--gray-400); line-height:1.6; margin-bottom:16px;"></p>
+            <a class="btn-outline btn-block" id="worksheet-btn" href="#">Download</a>
+            <p class="hidden" id="worksheet-soon" style="font-size:13px; color:var(--gray-600); line-height:1.6;">
+              This worksheet is being finished. It will appear here as soon as it is uploaded.
+            </p>
+          </div>
+          <div class="panel panel-quiet">
+            <div class="eyebrow" style="margin-bottom:10px;">Your Path</div>
+            <div id="mini-path" style="display:grid; gap:8px;"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>&copy; <span id="yr"></span> The One Percent Nation</span>
+    <span><a href="/rewrite-method/course">All Weeks</a></span>
+  </div>
+</footer>
+
+<script src="/assets/rewrite-method.data.js"></script>
+<script type="module">
+  import {
+    onUser, loadEnrollment, isEntitled, unlockState, formatUnlockDate,
+    getModuleVideos, worksheetUrl, submitCheckin, uploadCheckinFile,
+    setReviewChoice, isConfigured, PORTAL_LOGIN_URL
+  } from '/assets/rewrite-method.js';
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  document.getElementById('signin-link').href = PORTAL_LOGIN_URL;
+
+  const slug = new URLSearchParams(location.search).get('week') || 'week-0';
+  const mod = REWRITE_MODULES.find(m => m.slug === slug);
+
+  const show = id => ['s-loading', 's-signedout', 's-blocked', 's-module']
+    .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+
+  const escapeHtml = str => String(str).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function blocked(title, copy) {
+    document.getElementById('blocked-title').textContent = title;
+    document.getElementById('blocked-copy').textContent = copy;
+    show('s-blocked');
+  }
+
+  /* ─── VIDEOS ───
+     Provider IDs arrive from the server only for a module this member
+     has actually reached. A null ID means the video is not uploaded
+     yet, which renders as a coming soon state rather than an error. */
+  function embedUrl(video) {
+    if (video.embedUrl) return video.embedUrl;
+    if (!video.providerId) return null;
+    if (video.provider === 'cloudflare') return `https://iframe.videodelivery.net/${video.providerId}`;
+    return `https://player.vimeo.com/video/${video.providerId}`;
+  }
+
+  function renderVideos(videos) {
+    document.getElementById('videos').innerHTML = videos.map((v, i) => {
+      const url = embedUrl(v);
+      const meta = REWRITE_MODULES.find(m => m.slug === slug).videos[i] || {};
+      const runtime = v.plannedRuntime || meta.plannedRuntime || '';
+      const body = url
+        ? `<div class="video-frame"><iframe src="${escapeHtml(url)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${escapeHtml(v.title)}"></iframe></div>`
+        : `<div class="video-frame"><div class="video-soon">
+             <div class="eyebrow">Coming soon</div>
+             <p>This video is being finished. It will appear here as soon as it is uploaded.</p>
+           </div></div>`;
+      return `<section class="video-block">
+          <div class="video-head">
+            <h2 class="video-title">${escapeHtml(v.title)}</h2>
+            ${runtime ? `<span class="video-run">${escapeHtml(runtime)}</span>` : ''}
+          </div>
+          ${body}
+        </section>`;
+    }).join('');
+  }
+
+  /* ─── CHECK-IN FORM ───
+     Fields render from the module document, so copy and field changes
+     ship as data updates rather than deploys. */
+  function renderCheckinForm(enrollment) {
+    const section = document.getElementById('checkin-section');
+    if (!mod.checkin) { section.classList.add('hidden'); return; }
+
+    const existing = (enrollment.checkins || {})[mod.slug];
+    document.getElementById('checkin-prompt').textContent = mod.checkin.prompt;
+    const form = document.getElementById('checkin-form');
+
+    if (existing) {
+      section.classList.add('checkin-done');
+      form.innerHTML = `<div class="notice"><strong>Check-in submitted.</strong> Your answers are saved privately to your account. Come back any time; the week stays open.</div>`;
+      return;
+    }
+
+    form.innerHTML = mod.checkin.fields.map(f => {
+      const req = f.required ? '<span class="req">*</span>' : '';
+      const note = f.note ? `<div class="note">${escapeHtml(f.note)}</div>` : '';
+      let input;
+      if (f.type === 'textarea') {
+        input = `<textarea name="${f.key}" ${f.required ? 'required' : ''}></textarea>`;
+      } else if (f.type === 'file') {
+        input = `<input type="file" name="${f.key}" accept="${escapeHtml(f.accept || '*/*')}" ${f.required ? 'required' : ''}>`;
+      } else if (f.type === 'number') {
+        input = `<input type="number" name="${f.key}" min="${f.min != null ? f.min : 0}" ${f.required ? 'required' : ''}>`;
+      } else {
+        input = `<input type="text" name="${f.key}" ${f.maxlength ? `maxlength="${f.maxlength}"` : ''} ${f.required ? 'required' : ''}>`;
+      }
+      return `<div class="field"><label>${escapeHtml(f.label)}${req}</label>${input}${note}</div>`;
+    }).join('') + `<button type="submit" class="btn-primary">Submit Check-in</button>`;
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type=submit]');
+      const msg = document.getElementById('checkin-msg');
+      msg.className = 'form-msg';
+      msg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const uid = window.__rewriteUid;
+        const data = {};
+        for (const f of mod.checkin.fields) {
+          const el = form.elements[f.key];
+          if (f.type === 'file') {
+            const file = el.files[0];
+            if (file) data[f.key] = await uploadCheckinFile(uid, mod.slug, f.key, file);
+          } else if (f.type === 'number') {
+            data[f.key] = el.value === '' ? null : Number(el.value);
+          } else {
+            data[f.key] = el.value.trim();
+          }
+        }
+        await submitCheckin(uid, mod.slug, data);
+
+        section.classList.add('checkin-done');
+        form.innerHTML = `<div class="notice"><strong>Check-in submitted.</strong> Your answers are saved privately to your account.</div>`;
+        if (mod.slug === 'week-6') showReviewStep();
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = 'Submit Check-in';
+        msg.className = 'form-msg error';
+        msg.textContent = 'That did not save. Check your connection and try again.';
+      }
+    });
+  }
+
+  /* ─── WEEK 6 REVIEW STEP ───
+     Either answer unlocks the bonus module. The review is an ask,
+     never a paywall. */
+  function showReviewStep() {
+    const section = document.getElementById('review-section');
+    document.getElementById('review-copy').textContent = REWRITE_COPY.reviewAsk;
+    section.classList.remove('hidden');
+    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    section.querySelectorAll('[data-review]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        section.querySelectorAll('button').forEach(b => (b.disabled = true));
+        try {
+          await setReviewChoice(btn.dataset.review);
+          section.innerHTML = `<div class="notice"><strong>${escapeHtml(REWRITE_COPY.completion)}</strong><br>
+            The Relapse Protocol is unlocked. <a href="/rewrite-method/course" style="color:var(--red);">Open it &rarr;</a></div>`;
+        } catch (err) {
+          console.error(err);
+          section.querySelectorAll('button').forEach(b => (b.disabled = false));
+        }
+      });
+    });
+  }
+
+  /* ─── WORKSHEET ─── */
+  async function renderWorksheet() {
+    const card = document.getElementById('worksheet-card');
+    if (!mod.worksheet) { card.classList.add('hidden'); return; }
+    document.getElementById('worksheet-label').textContent = mod.worksheet.label;
+    const btn = document.getElementById('worksheet-btn');
+    const url = mod.worksheet.storagePath ? await worksheetUrl(mod.worksheet.storagePath) : null;
+    if (url) {
+      btn.href = url;
+      btn.setAttribute('target', '_blank');
+      btn.setAttribute('rel', 'noopener');
+    } else {
+      btn.classList.add('hidden');
+      document.getElementById('worksheet-soon').classList.remove('hidden');
+    }
+  }
+
+  /* ─── NAV + MINI PATH (locks respected) ─── */
+  function renderNav(enrollment) {
+    const ordered = REWRITE_MODULES.slice().sort((a, b) => a.order - b.order);
+    const idx = ordered.findIndex(m => m.slug === mod.slug);
+
+    const linkFor = (m, el, fallbackText) => {
+      if (!m) { el.classList.add('hidden'); return; }
+      const state = unlockState(m, enrollment);
+      if (state.unlocked) {
+        el.href = `/rewrite-method/module?week=${m.slug}`;
+        el.textContent = fallbackText.replace('{title}', m.title);
+      } else {
+        el.href = '/rewrite-method/course';
+        el.textContent = fallbackText.replace('{title}', 'Locked');
+        el.style.opacity = '0.5';
+      }
+    };
+    linkFor(ordered[idx - 1], document.getElementById('prev-link'), '← {title}');
+    linkFor(ordered[idx + 1], document.getElementById('next-link'), '{title} →');
+
+    document.getElementById('mini-path').innerHTML = ordered.map(m => {
+      const state = unlockState(m, enrollment);
+      const done = Boolean((enrollment.checkins || {})[m.slug]);
+      const here = m.slug === mod.slug;
+      const dot = done ? 'done' : (state.unlocked ? 'open' : '');
+      const label = m.order === 99
+        ? `Bonus &middot; ${escapeHtml(m.title.replace(/^Bonus:\s*/, ''))}`
+        : `Week ${m.order} &middot; ${escapeHtml(m.title)}`;
+      const inner = `<span class="dot ${dot}"></span><span style="font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; color:${here ? 'var(--white)' : 'var(--gray-600)'};">${label}</span>`;
+      const row = `<span style="display:flex; align-items:center; gap:9px;">${inner}</span>`;
+      return state.unlocked && !here
+        ? `<a href="/rewrite-method/module?week=${m.slug}">${row}</a>`
+        : row;
+    }).join('');
+  }
+
+  async function boot() {
+    if (!mod) { blocked('Week Not Found', 'That week is not part of The Rewrite Method.'); return; }
+
+    document.getElementById('mod-label').textContent = mod.order === 99 ? 'Bonus Module' : `Week ${mod.order}`;
+    document.getElementById('mod-title').textContent = mod.title;
+    document.getElementById('mod-summary').textContent = mod.summary;
+    document.title = `${mod.title} | The Rewrite Method`;
+
+    if (!isConfigured) { show('s-signedout'); return; }
+
+    onUser(async user => {
+      if (!user) { show('s-signedout'); return; }
+      window.__rewriteUid = user.uid;
+      document.getElementById('nav-user').textContent = user.email || '';
+
+      const enrollment = await loadEnrollment(user.uid);
+      if (!enrollment || enrollment.revoked || !isEntitled(enrollment)) {
+        blocked('Not Enrolled', 'This week is part of The Rewrite Method. Enroll to open it.');
+        return;
+      }
+
+      const state = unlockState(mod, enrollment);
+      if (!state.unlocked) {
+        blocked(
+          'Not Open Yet',
+          state.reason || REWRITE_COPY.lockedTooltip.replace('{date}', formatUnlockDate(state.unlockDate) || 'soon')
+        );
+        return;
+      }
+
+      show('s-module');
+      renderCheckinForm(enrollment);
+      renderWorksheet();
+      renderNav(enrollment);
+
+      // Week 6 members who already checked in but never answered the ask.
+      if (mod.slug === 'week-6' && (enrollment.checkins || {})['week-6'] && !enrollment.reviewChoice) {
+        showReviewStep();
+      }
+
+      const res = await getModuleVideos(mod.slug);
+      renderVideos((res && res.videos && res.videos.length) ? res.videos : mod.videos);
+    });
+  }
+
+  boot();
+</script>
+</body>
+</html>

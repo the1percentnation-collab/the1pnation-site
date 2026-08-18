@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Rewrite Method | The One Percent Nation</title>
+  <meta name="description" content="Six weeks to take back the pen. The Rewrite Method walks you through finding the sentence you were handed, putting it on trial, and writing the new line. Companion to the book I CAN'T by Anthony Brown Sr.">
+  <meta property="og:title" content="The Rewrite Method | Six weeks to take back the pen.">
+  <meta property="og:description" content="The six-week program that walks you through finding the sentence you were handed, putting it on trial, and writing the new line.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/rewrite-method.css">
+  <style>
+    /* Sales page only */
+    .hero {
+      padding:calc(var(--nav-h) + 90px) 0 90px;
+      position:relative; z-index:1;
+    }
+    .hero-grid {
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:80px 80px;
+      mask-image:radial-gradient(ellipse 60% 70% at 70% 35%,black 10%,transparent 70%);
+      -webkit-mask-image:radial-gradient(ellipse 60% 70% at 70% 35%,black 10%,transparent 70%);
+      opacity:0.5;
+    }
+    .hero-inner { display:grid; grid-template-columns:1.25fr 0.75fr; gap:56px; align-items:start; }
+    .hero h1 { margin:18px 0 14px; }
+    .hero .subline { display:block; margin-bottom:26px; }
+    .hero .lede { max-width:620px; margin-bottom:30px; }
+
+    .buy-card { position:sticky; top:calc(var(--nav-h) + 24px); }
+    .price-row { display:flex; align-items:baseline; gap:10px; margin:4px 0 6px; }
+    .price { font-family:var(--font-display); font-size:52px; line-height:1; }
+    .price-note { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gray-600); }
+    .buy-list { list-style:none; margin:18px 0 22px; display:grid; gap:9px; }
+    .buy-list li { font-size:14px; color:var(--gray-400); padding-left:20px; position:relative; line-height:1.5; }
+    .buy-list li::before { content:''; position:absolute; left:0; top:8px; width:8px; height:1px; background:var(--red); }
+    .buy-divider { height:1px; background:var(--border); margin:22px 0; }
+    .promo-applied {
+      font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--red); border:1px solid var(--border-red); border-radius:2px;
+      padding:6px 10px; display:inline-block; margin-bottom:14px;
+    }
+
+    .moves { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .move {
+      background:var(--charcoal); border:1px solid var(--border); border-radius:10px;
+      padding:22px; display:flex; flex-direction:column; gap:10px;
+    }
+    .move-num { font-family:var(--font-mono); font-size:11px; letter-spacing:0.2em; color:var(--red); }
+    .move-title { font-family:var(--font-display); font-size:23px; letter-spacing:0.02em; text-transform:uppercase; line-height:1.05; }
+    .move-desc { font-size:13.5px; line-height:1.6; color:var(--gray-400); }
+
+    .gets { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .get { background:var(--black-2); border:1px solid var(--border); border-radius:10px; padding:22px; }
+    .get h3 { font-family:var(--font-display); font-size:20px; letter-spacing:0.03em; text-transform:uppercase; margin-bottom:8px; }
+    .get p { font-size:13.5px; line-height:1.6; color:var(--gray-400); }
+
+    .vocab { display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
+    .vocab span {
+      font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--gray-400); border:1px solid var(--border); border-radius:2px; padding:7px 12px;
+    }
+
+    .faq-item { border-bottom:1px solid var(--border); }
+    .faq-q {
+      width:100%; text-align:left; background:none; border:0; cursor:pointer; color:var(--white);
+      font-family:var(--font-body); font-size:16px; font-weight:600;
+      padding:22px 40px 22px 0; position:relative;
+    }
+    .faq-q::after {
+      content:'+'; position:absolute; right:8px; top:50%; transform:translateY(-50%);
+      color:var(--red); font-size:20px; font-weight:400;
+    }
+    .faq-item.open .faq-q::after { content:'-'; }
+    .faq-a { max-height:0; overflow:hidden; transition:max-height 0.35s var(--ease-out); }
+    .faq-item.open .faq-a { max-height:400px; }
+    .faq-a p { padding:0 0 22px; color:var(--gray-400); font-size:15px; line-height:1.7; }
+
+    .band { border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--black-2); }
+
+    @media (max-width:900px) {
+      .hero-inner { grid-template-columns:1fr; gap:36px; }
+      .buy-card { position:static; }
+      .moves { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero-grid"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/assets/logo.jpg" alt="The One Percent Nation">
+      <span class="nav-logo-text">
+        <span class="l1">The One Percent</span>
+        <span class="l2">NATION</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="/rewrite-method/course" class="nav-back">My Course</a>
+      <a href="/" class="nav-back">&larr; Main Site</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <span class="tag">New Course</span>
+        <h1 class="display-xl">The <span class="red">Rewrite</span><br>Method</h1>
+        <span class="subline">Six weeks to take back the pen.</span>
+        <p class="lede" id="hero-copy"></p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+          <a href="#enroll" class="btn-primary btn-lg">Enroll Now &rarr;</a>
+          <a href="#the-six-moves" class="btn-outline btn-lg">See the Six Moves</a>
+        </div>
+        <div class="vocab">
+          <span>the sentence</span><span>the handwriting</span><span>the draft</span>
+          <span>the new line</span><span>the pen</span><span>the Manuscript</span>
+        </div>
+      </div>
+
+      <!-- ─── BUY CARD ─── -->
+      <aside class="panel buy-card" id="enroll">
+        <div class="eyebrow">Enrollment</div>
+        <div class="price-row">
+          <span class="price">$197</span>
+          <span class="price-note">One time</span>
+        </div>
+        <p style="font-size:13.5px; color:var(--gray-400); line-height:1.6;">
+          Six weeks of video, The Manuscript workbook, weekly check-ins, and the bonus module.
+        </p>
+        <ul class="buy-list">
+          <li>Seven modules, released one week at a time</li>
+          <li>The Manuscript, the full workbook</li>
+          <li>A worksheet and a check-in every week</li>
+          <li>Bonus: The Relapse Protocol</li>
+          <li>The One Percent Nation community</li>
+        </ul>
+        <div id="promo-slot"></div>
+        <button class="btn-primary btn-block" data-plan="courseOnly">Enroll for $197</button>
+
+        <div class="buy-divider"></div>
+
+        <div class="eyebrow">Course + Signed Book</div>
+        <div class="price-row">
+          <span class="price" style="font-size:38px;">$209</span>
+          <span class="price-note">Includes shipping</span>
+        </div>
+        <p style="font-size:13.5px; color:var(--gray-400); line-height:1.6; margin-bottom:16px;">
+          The full course plus a signed copy of I CAN'T, shipped to you.
+        </p>
+        <button class="btn-outline btn-block" data-plan="bundle">Enroll with the Book, $209</button>
+
+        <p style="font-size:12px; color:var(--gray-600); margin-top:16px; line-height:1.6;">
+          Already bought the book? Use the code on your QR page for $50 off.
+        </p>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<!-- ─── WHAT YOU GET ─── -->
+<section class="section-pad-sm band">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:22px;">What you get</div>
+    <div class="gets">
+      <div class="get"><h3>Six Weeks</h3><p>One module a week, from Week 0 through Week 6. The pace is the point.</p></div>
+      <div class="get"><h3>18 Videos</h3><p>Short, direct teaching. Nothing padded, nothing you have to sit through twice.</p></div>
+      <div class="get"><h3>The Manuscript</h3><p>The full workbook, plus a worksheet built for each week's move.</p></div>
+      <div class="get"><h3>Weekly Check-Ins</h3><p>You write it down and submit it. Private to you.</p></div>
+      <div class="get"><h3>The Community</h3><p>The One Percent Nation, for the weeks the work gets quiet.</p></div>
+      <div class="get"><h3>Bonus Module</h3><p>The Relapse Protocol, for the day the old sentence comes back.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── THE SIX MOVES ─── -->
+<section class="section-pad" id="the-six-moves">
+  <div class="container">
+    <span class="tag">The Path</span>
+    <h2 class="display-lg" style="margin:18px 0 14px;">The Six <span class="red">Moves</span></h2>
+    <p class="lede" style="max-width:620px; margin-bottom:38px;">
+      Every week is one move. You do not skip ahead, because the rewrite happens at the speed of reps, not the speed of reading.
+    </p>
+    <div class="moves" id="moves"></div>
+  </div>
+</section>
+
+<!-- ─── FAQ ─── -->
+<section class="section-pad-sm band">
+  <div class="container-narrow">
+    <span class="tag">Questions</span>
+    <h2 class="display-lg" style="margin:18px 0 26px;">Before You <span class="red">Start</span></h2>
+
+    <div class="faq-item">
+      <button class="faq-q" type="button">Do I need to read I CAN'T first?</button>
+      <div class="faq-a"><p>No. The course stands on its own. The book deepens it, which is why the bundle exists, but Week 0 starts you where you are.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" type="button">Why does it unlock one week at a time?</button>
+      <div class="faq-a"><p>Because reading is not rewriting. Each week asks you to run the move in your actual life before the next one opens. Bingeing the videos would give you information and no change.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" type="button">How long does each week take?</button>
+      <div class="faq-a"><p>Under an hour of video and worksheet. The reps happen inside the hours you already live.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" type="button">Who sees my check-ins?</button>
+      <div class="faq-a"><p>They are stored privately under your own account. They are not posted, shared, or visible to other members.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" type="button">What if I fall behind?</button>
+      <div class="faq-a"><p>Your access does not expire. Weeks open on schedule and stay open. Never miss twice.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" type="button">I bought the book. Is there a discount?</button>
+      <div class="faq-a"><p>Yes. The QR page in the back of I CAN'T carries a code worth $50 off. Apply it at checkout or open this page with your code link.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLOSE ─── -->
+<section class="section-pad">
+  <div class="container-narrow" style="text-align:center;">
+    <h2 class="display-lg">Take Back <span class="red">the Pen</span></h2>
+    <p class="lede" style="margin:16px auto 30px; max-width:520px;">
+      Six weeks. One move at a time. You finish this a Rewriter.
+    </p>
+    <a href="#enroll" class="btn-primary btn-lg">Enroll Now &rarr;</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span>&copy; <span id="yr"></span> The One Percent Nation</span>
+    <span><a href="/">Main Site</a> &nbsp;/&nbsp; <a href="/rewrite-method/course">Member Course</a></span>
+  </div>
+</footer>
+
+<script src="/assets/rewrite-method.data.js"></script>
+<script type="module">
+  import { startCheckout, isConfigured, PORTAL_LOGIN_URL } from '/assets/rewrite-method.js';
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  document.getElementById('hero-copy').textContent = REWRITE_COPY.salesHero;
+
+  /* The six moves, rendered from course data so week titles never drift. */
+  const moveDesc = [
+    'Drag the belief into the light and lock the one line you have been living by.',
+    'See where it came from and log every time it fires before you think.',
+    'Put the sentence on trial and learn to use the three-second window.',
+    'Shrink the move, anchor it to an hour you already live, and mark it.',
+    'Evict and replace, cast the daily vote, and plan the comeback.',
+    'The five and the rooms, the inputs you carry, and why there is no final draft.'
+  ];
+  document.getElementById('moves').innerHTML = REWRITE_MOVES.map((m, i) => `
+    <article class="move fade-up">
+      <span class="move-num">Move 0${i + 1}</span>
+      <h3 class="move-title">${m}</h3>
+      <p class="move-desc">${moveDesc[i]}</p>
+    </article>`).join('');
+
+  /* ─── PROMO CODE ───
+     Book buyers arrive on /rewrite-method?code=XXXX. The code is
+     carried into the Stripe Checkout session as a promotion code;
+     Stripe decides whether it is valid, not this page. */
+  const promoCode = new URLSearchParams(location.search).get('code');
+  if (promoCode) {
+    document.getElementById('promo-slot').innerHTML =
+      `<span class="promo-applied">Code ${promoCode.replace(/[^a-zA-Z0-9_-]/g, '')} applied at checkout</span>`;
+  }
+
+  /* ─── CHECKOUT ─── */
+  document.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Opening checkout...';
+      try {
+        if (!isConfigured) { window.location.href = PORTAL_LOGIN_URL; return; }
+        await startCheckout(btn.dataset.plan, promoCode);
+      } catch (err) {
+        console.error(err);
+        btn.textContent = label;
+        btn.disabled = false;
+        alert('Checkout could not be opened. Please try again, or email the1percentnation@gmail.com.');
+      }
+    });
+  });
+
+  /* ─── FAQ ─── */
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.parentElement;
+      const open = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!open) item.classList.add('open');
+    });
+  });
+
+  /* ─── SCROLL REVEAL ─── */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -48px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

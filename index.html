@@ -415,7 +415,7 @@
       margin-bottom: 48px; gap: 32px; flex-wrap: wrap;
     }
     .courses-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
     }
     .course-card {
       background: var(--charcoal); border: 1px solid var(--border);
@@ -1435,6 +1435,26 @@
               <div class="course-detail" style="margin-top:4px;"><strong>Cohort-based</strong></div>
             </div>
             <button class="course-arrow" onclick="openLogin()">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="course-card fade-up fade-up-delay-3">
+        <div class="course-thumb">
+          <div class="course-thumb-bg" style="background: linear-gradient(135deg, #0a0a0a 0%, #2a0000 100%);"></div>
+          <div class="course-thumb-num">RM</div>
+          <div class="course-thumb-badge">New</div>
+        </div>
+        <div class="course-body">
+          <div class="course-cat">Companion to I CAN'T</div>
+          <div class="course-title">THE REWRITE METHOD</div>
+          <p class="course-desc">Six weeks to take back the pen. Find the sentence you were handed, put it on trial, and write the new line, with the system that keeps it true.</p>
+          <div class="course-meta">
+            <div>
+              <div class="course-detail"><strong>7</strong> Modules</div>
+              <div class="course-detail" style="margin-top:4px;"><strong>Six weeks</strong> + Bonus</div>
+            </div>
+            <a class="course-arrow" href="/rewrite-method" aria-label="The Rewrite Method">→</a>
           </div>
         </div>
       </div>

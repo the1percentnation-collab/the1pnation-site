@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Rewrite Method | Course Home</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/rewrite-method.css">
+  <style>
+    .course-head { padding:calc(var(--nav-h) + 56px) 0 34px; }
+    .course-head h1 { margin:16px 0 12px; }
+    .head-bar {
+      display:flex; flex-wrap:wrap; gap:26px; align-items:center; justify-content:space-between;
+      margin-top:30px; padding-top:26px; border-top:1px solid var(--border);
+    }
+    .head-links { display:flex; flex-wrap:wrap; gap:12px; }
+    .progress-wrap { min-width:260px; flex:1; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/assets/logo.jpg" alt="The One Percent Nation">
+      <span class="nav-logo-text">
+        <span class="l1">The One Percent</span>
+        <span class="l2">NATION</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="/" class="nav-back">&larr; Main Site</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- LOADING -->
+  <div id="s-loading" class="state">
+    <p class="eyebrow">Loading your course</p>
+  </div>
+
+  <!-- SIGNED OUT / PREVIEW -->
+  <div id="s-signedout" class="state hidden">
+    <h1 class="display-md">Sign In to Continue</h1>
+    <p>The Rewrite Method lives inside your member account. Sign in and your weeks pick up where you left them.</p>
+    <a class="btn-primary btn-lg" id="signin-link" href="#">Sign In &rarr;</a>
+    <p style="margin-top:26px; font-size:13px;">
+      Not enrolled yet? <a href="/rewrite-method" style="color:var(--red);">See the course &rarr;</a>
+    </p>
+  </div>
+
+  <!-- NOT ENROLLED -->
+  <div id="s-unenrolled" class="state hidden">
+    <h1 class="display-md">You Are Not Enrolled Yet</h1>
+    <p>The Rewrite Method is a six-week program, released one week at a time. Enrollment opens the whole path, starting with Week 0.</p>
+    <a class="btn-primary btn-lg" href="/rewrite-method">See the Course &rarr;</a>
+  </div>
+
+  <!-- REVOKED -->
+  <div id="s-revoked" class="state hidden">
+    <h1 class="display-md">Access Ended</h1>
+    <p>This enrollment was refunded, so course access is closed. If that is not right, email the1percentnation@gmail.com and we will sort it out.</p>
+    <a class="btn-outline btn-lg" href="/rewrite-method">Course Details</a>
+  </div>
+
+  <!-- COURSE -->
+  <div id="s-course" class="hidden">
+    <header class="course-head">
+      <div class="container">
+        <span class="tag">The Rewrite Method</span>
+        <h1 class="display-lg">Take Back <span class="red">the Pen</span></h1>
+        <p class="lede" style="max-width:620px;" id="welcome"></p>
+
+        <div class="head-bar">
+          <div class="progress-wrap">
+            <span class="progress-label" id="progress-label">0 / 7 check-ins</span>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+          </div>
+          <div class="head-links">
+            <a class="btn-outline" id="manuscript-btn" href="#">The Manuscript</a>
+            <a class="btn-ghost" href="https://the1p-leadership.web.app/community" target="_blank" rel="noopener">Community &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section style="padding-bottom:90px;">
+      <div class="container">
+        <div id="rewriter-banner" class="notice hidden" style="margin-bottom:22px;"></div>
+        <div class="week-grid" id="weeks"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>&copy; <span id="yr"></span> The One Percent Nation</span>
+    <span><a href="/rewrite-method">Course Details</a></span>
+  </div>
+</footer>
+
+<script src="/assets/rewrite-method.data.js"></script>
+<script type="module">
+  import {
+    onUser, loadEnrollment, isEntitled, unlockState, formatUnlockDate,
+    daysUntil, progressCount, worksheetUrl, isConfigured, PORTAL_LOGIN_URL, fireEmailEvent
+  } from '/assets/rewrite-method.js';
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  document.getElementById('signin-link').href = PORTAL_LOGIN_URL;
+
+  const show = id => {
+    ['s-loading', 's-signedout', 's-unenrolled', 's-revoked', 's-course']
+      .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+  };
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* ─── WEEK CARDS ───
+     Locked weeks always render with a title and an unlock date.
+     The visible path forward is part of the product. */
+  function renderWeeks(enrollment) {
+    const checkins = enrollment.checkins || {};
+    const html = REWRITE_MODULES.map(mod => {
+      const state = unlockState(mod, enrollment);
+      const done = Boolean(checkins[mod.slug]);
+      const bonus = mod.order === 99;
+      const label = bonus ? 'Bonus' : `Week ${mod.order}`;
+      const num = bonus ? '&#9733;' : mod.order;
+
+      let status, statusClass;
+      if (done) { status = 'Check-in complete'; statusClass = 'done'; }
+      else if (state.unlocked) { status = 'Open'; statusClass = 'open'; }
+      else if (bonus) { status = 'Locked'; statusClass = ''; }
+      else {
+        const d = daysUntil(state.unlockDate);
+        status = state.unlockDate
+          ? `Unlocks ${formatUnlockDate(state.unlockDate)}${d ? ` &middot; ${d} day${d === 1 ? '' : 's'}` : ''}`
+          : 'Locked';
+        statusClass = '';
+      }
+
+      const tooltip = state.unlocked
+        ? ''
+        : (state.reason || REWRITE_COPY.lockedTooltip.replace('{date}', formatUnlockDate(state.unlockDate) || 'soon'));
+
+      const videoCount = mod.videos.length;
+      const action = state.unlocked
+        ? `<a class="btn-outline" href="/rewrite-method/module?week=${mod.slug}">${done ? 'Revisit' : 'Open'} &rarr;</a>`
+        : '';
+
+      return `
+        <article class="week-card ${state.unlocked ? 'is-open' : 'is-locked'}" ${tooltip ? `title="${escapeHtml(tooltip)}"` : ''}>
+          <div class="week-rail">
+            <span class="wk">${label.toUpperCase()}</span>
+            <span class="num">${num}</span>
+          </div>
+          <div class="week-body">
+            <h2 class="week-title">${escapeHtml(mod.title.replace(/^Bonus:\s*/, ''))}</h2>
+            <p class="week-desc">${escapeHtml(mod.summary)}</p>
+            <div class="week-meta">
+              <span class="week-status"><span class="dot ${statusClass}"></span>${status}</span>
+              <span>${videoCount} video${videoCount === 1 ? '' : 's'}</span>
+              ${mod.worksheet ? '<span>Worksheet</span>' : ''}
+              ${mod.checkin ? '<span>Check-in</span>' : ''}
+            </div>
+          </div>
+          <div class="week-action">${action}</div>
+        </article>`;
+    }).join('');
+    document.getElementById('weeks').innerHTML = html;
+  }
+
+  function renderProgress(enrollment) {
+    const done = progressCount(enrollment);
+    const total = 7; // Week 0 through Week 6. The bonus carries no check-in.
+    document.getElementById('progress-label').textContent = `${done} / ${total} check-ins`;
+    document.getElementById('progress-fill').style.width = `${Math.round((done / total) * 100)}%`;
+
+    if (enrollment.isRewriter) {
+      const banner = document.getElementById('rewriter-banner');
+      banner.innerHTML = `<strong>${escapeHtml(REWRITE_COPY.completion)}</strong>`;
+      banner.classList.remove('hidden');
+    }
+  }
+
+  async function wireManuscript() {
+    const week0 = REWRITE_MODULES[0];
+    const btn = document.getElementById('manuscript-btn');
+    const url = await worksheetUrl(week0.worksheet && week0.worksheet.storagePath);
+    if (url) {
+      btn.href = url;
+      btn.setAttribute('target', '_blank');
+      btn.setAttribute('rel', 'noopener');
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+
+  async function boot() {
+    document.getElementById('welcome').textContent = REWRITE_COPY.courseWelcome;
+
+    if (!isConfigured) { show('s-signedout'); return; }
+
+    onUser(async user => {
+      if (!user) { show('s-signedout'); return; }
+      document.getElementById('nav-user').textContent = user.email || '';
+
+      let enrollment;
+      try {
+        enrollment = await loadEnrollment(user.uid);
+      } catch (err) {
+        console.error('[rewrite] enrollment load failed', err);
+        show('s-unenrolled');
+        return;
+      }
+
+      if (!enrollment) { show('s-unenrolled'); return; }
+      if (enrollment.revoked) { show('s-revoked'); return; }
+      if (!isEntitled(enrollment)) { show('s-unenrolled'); return; }
+
+      // First open of the course is the drip anchor. Announce it once.
+      if (!sessionStorage.getItem('rewrite_enrolled_event')) {
+        sessionStorage.setItem('rewrite_enrolled_event', '1');
+        fireEmailEvent('rewrite_enrolled', { enrolledAt: String(enrollment.enrolledAt || '') });
+      }
+
+      renderWeeks(enrollment);
+      renderProgress(enrollment);
+      wireManuscript();
+      show('s-course');
+    });
+  }
+
+  boot();
+</script>
+</body>
+</html>
