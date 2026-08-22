@@ -5,6 +5,18 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/studio",
+        "destination": "https://onepstudio-9a3ef.web.app",
+        "type": 301
+      },
+      {
+        "source": "/studio/:path*",
+        "destination": "https://onepstudio-9a3ef.web.app/:path*",
+        "type": 301
+      }
     ]
   }
 }
