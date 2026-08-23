@@ -169,6 +169,21 @@ const privateDoc = {
 const ref = db.collection('classes').doc(SLUG);
 const existing = await ref.get();
 
+/* Re-running this would overwrite copy, price, and capacity with the
+   values in this file, throwing away anything edited in the admin
+   console. So an existing class is left alone unless overwriting is
+   asked for explicitly. */
+if (existing.exists && process.env.FORCE !== '1') {
+  const d = existing.data();
+  console.log(`classes/${SLUG} already exists. Leaving it untouched.`);
+  console.log(`  name          : ${d.name}`);
+  console.log(`  status        : ${d.status}`);
+  console.log(`  interestCount : ${d.interestCount ?? 0}`);
+  console.log(`  seatsPaid     : ${d.seatsPaid ?? 0}`);
+  console.log('\nTo overwrite the copy and pricing with this file, re-run with FORCE=1.');
+  process.exit(0);
+}
+
 await ref.set(
   existing.exists
     ? { ...publicDoc, seatsPaid: existing.data().seatsPaid ?? 0, interestCount: existing.data().interestCount ?? 0 }
@@ -177,6 +192,11 @@ await ref.set(
 );
 await ref.collection('private').doc('config').set(privateDoc, { merge: true });
 
-console.log(`Seeded classes/${SLUG}${existing.exists ? ' (updated)' : ' (created)'}`);
-console.log('Set the real price, capacity, and session dates in /admin.html before announcing.');
+const after = (await ref.get()).data();
+console.log(`Seeded classes/${SLUG} ${existing.exists ? '(overwritten)' : '(created)'}`);
+console.log(`  name     : ${after.name}`);
+console.log(`  status    : ${after.status}`);
+console.log(`  price     : ${after.price?.amount} founding ${after.price?.foundingAmount}`);
+console.log(`  capacity  : ${after.capacity}`);
+console.log('\nSet the real price, capacity, and session dates in /admin before announcing.');
 process.exit(0);

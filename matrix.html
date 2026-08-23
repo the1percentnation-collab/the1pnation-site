@@ -763,11 +763,21 @@
 
     renderState(state);
   } catch (err) {
-    // The backend is not reachable. Rather than showing a broken
-    // form, point people at email so a lead is never simply lost.
-    console.error('Class state unavailable', err);
-    stateNote.innerHTML =
-      'Signups are briefly unavailable. Email <a href="mailto:the1percentnation@gmail.com" style="color:var(--red)">the1percentnation@gmail.com</a> and I will add you to the list myself.';
+    // Whatever went wrong, a visitor still gets a way to reach Anthony
+    // so a lead is never simply lost. But the message distinguishes the
+    // causes, because "unavailable" for a class record that was never
+    // created reads as an outage and sends you looking in the wrong
+    // place. Ask any browser console and it will now say which it is.
+    console.error('[matrix] class state unavailable', err?.code || '', err);
+
+    const missing = err?.code === 'functions/not-found';
+    stateNote.innerHTML = missing
+      ? 'Registration for this class is not open yet. Email ' +
+        '<a href="mailto:the1percentnation@gmail.com" style="color:var(--red)">the1percentnation@gmail.com</a> ' +
+        'and I will tell you the moment it is.'
+      : 'Signups are briefly unavailable. Email ' +
+        '<a href="mailto:the1percentnation@gmail.com" style="color:var(--red)">the1percentnation@gmail.com</a> ' +
+        'and I will add you to the list myself.';
     stateNote.hidden = false;
     form.style.display = 'none';
   }
