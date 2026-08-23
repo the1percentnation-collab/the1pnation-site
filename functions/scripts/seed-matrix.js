@@ -128,7 +128,14 @@ const publicDoc = {
 
   // Anthony sets the real numbers in the admin console. These are
   // recommended starting points, not final.
-  price: { amount: 29700, foundingAmount: 19700, foundingUntil: null, currency: 'usd' },
+  // One price, $297. foundingAmount is 0, so resolvePricing() treats
+  // no discount as active and the page shows a single figure.
+  //
+  // To run a founding rate later, set foundingAmount to the lower
+  // price in cents and foundingUntil to an ISO date. The server prices
+  // against its own clock, so the deadline is real and a stale tab
+  // cannot buy at the old rate after it passes.
+  price: { amount: 29700, foundingAmount: 0, foundingUntil: null, currency: 'usd' },
   capacity: 30,
   seatsPaid: 0,
   interestCount: 0,

@@ -540,7 +540,8 @@
       ['Paid', paid, true],
       ['Seats Left', capacity ? Math.max(0, capacity - paid) : 'no cap', false],
       ['Total Records', s.total || 0, false],
-      ['No Portal Login', (signups.rows || []).filter((r) => !r.portalUid).length, false]
+      ['No Portal Login', (signups.rows || []).filter((r) => !r.portalUid).length, false],
+      ['Email Failed', (signups.rows || []).filter((r) => r.lastEmailError).length, false]
     ].map(([label, num, red]) =>
       `<div class="stat"><div class="stat-num ${red ? 'red' : ''}">${esc(num)}</div><div class="stat-label">${esc(label)}</div></div>`
     ).join('');
@@ -574,7 +575,7 @@
   /* ── Signup sheet ────────────────────────────────────── */
   const COLUMNS = [
     ['firstName', 'First'], ['lastName', 'Last'], ['email', 'Email'], ['phone', 'Phone'],
-    ['stage', 'Stage'], ['portal', 'Portal'], ['portalProjectId', 'Portal Project'],
+    ['stage', 'Stage'], ['portal', 'Portal'], ['email_status', 'Welcome Email'],
     ['source', 'Source'], ['createdAt', 'Signed Up']
   ];
 
@@ -605,7 +606,7 @@
           <td>${esc(r.phone) || '<span class="muted">not set</span>'}</td>
           <td><span class="pill ${esc(r.stage)}">${esc(r.stage)}</span></td>
           <td>${portalCell(r)}</td>
-          <td class="muted" style="font-size:11px;">${esc(r.portalProjectId) || '<span class="muted">unknown</span>'}</td>
+          <td>${emailCell(r)}</td>
           <td class="muted">${esc(r.utm.utm_source || r.source || '')}</td>
           <td class="muted">${r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString()) : ''}</td>
         </tr>`).join('')
@@ -627,6 +628,15 @@
      is unset and the portal is a separate Firebase project, accounts
      land in the wrong place, and the Portal Project column next to
      this one shows which project they went to. */
+  /* Why a welcome email did not send. Surfaced next to the person it
+     failed for, because the usual cause is a SendGrid sender identity
+     that was never verified, and that fails silently for everyone at
+     once rather than for one address. */
+  function emailCell(r) {
+    if (!r.lastEmailError) return '<span class="muted">sent</span>';
+    return `<span class="pill" style="border-color:var(--red);color:var(--red)" title="${esc(r.lastEmailError)}">failed</span>`;
+  }
+
   function portalCell(r) {
     if (r.portalError) return `<span class="pill" style="border-color:var(--red);color:var(--red)" title="${esc(r.portalError)}">failed</span>`;
     if (!r.portalUid) return '<span class="pill">none</span>';
@@ -638,6 +648,7 @@
   const cell = (row, key) =>
     ({
       portal: row.portalError ? 'failed' : row.portalUid ? (row.portalCreated ? 'created' : 'existing') : 'none',
+      email_status: row.lastEmailError ? 'failed' : 'sent',
       platform: row.answers.platform,
       timing: row.answers.timing,
       interests: (row.answers.interests || []).join(',')
