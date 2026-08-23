@@ -204,8 +204,23 @@ Subscribe it to `checkout.session.completed` and put its signing secret into
 `STRIPE_WEBHOOK_SECRET`.
 
 ### 6. Deploy and seed
+Deploying is automatic: merging to `main` runs the workflow.
+
+**Seeding is not, and the page does not work without it.** The class page reads
+its copy, price, and capacity from a Firestore document, and `getClassState`
+returns not-found until that document exists. The page shows that as a message
+telling visitors registration is not open yet.
+
+Run the **Seed a class record** workflow once from
+<https://github.com/the1percentnation-collab/the1pnation-site/actions>: pick it in
+the left sidebar, click **Run workflow**, leave `force` unchecked, and run it.
+
+Safe to run again. An existing class is left untouched unless you tick `force`,
+so it cannot quietly overwrite copy you have edited in `/admin`.
+
+If you prefer the CLI:
+
 ```bash
-firebase deploy --only hosting,functions:classes
 cd functions && npm run seed
 ```
 

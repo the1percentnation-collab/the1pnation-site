@@ -1,0 +1,54 @@
+name: Seed a class record
+
+# Manual only. The class page reads its copy, price, and capacity from
+# a Firestore document, and getClassState returns not-found until that
+# document exists, which the page shows as "signups are briefly
+# unavailable". This creates it.
+#
+# Safe to run more than once: an existing class is left untouched
+# unless `force` is set, so it cannot silently overwrite copy edited in
+# the admin console.
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Overwrite an existing class with the values in the seed script'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install function dependencies
+        working-directory: functions
+        run: npm install
+
+      - name: Authenticate to Firebase
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP }}
+
+      # Writes only classes/{slug} and its private config. It touches
+      # no collection the member portal owns.
+      - name: Seed the class
+        working-directory: functions
+        run: node scripts/seed-matrix.js
+        env:
+          GCLOUD_PROJECT: the-1p-leadership
+          FORCE: ${{ inputs.force && '1' || '0' }}
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
