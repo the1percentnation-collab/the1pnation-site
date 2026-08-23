@@ -1,23 +1,29 @@
 /**
  * Firebase client bootstrap.
  *
- * The values below are the Firebase *web* config. They are public
- * by design and safe to commit: they identify the project, they do
- * not authorise anything. All access control lives in
- * firestore.rules and in the admin claim checks inside the Cloud
- * Functions.
+ * The config below is the Firebase *web* config. It is public by
+ * design and safe to commit: it identifies the project, it does not
+ * authorise anything. All access control lives in firestore.rules and
+ * in the admin claim checks inside the Cloud Functions.
  *
- * TO FILL IN: Firebase console -> Project settings -> General ->
- * Your apps -> Web app -> SDK setup and configuration -> Config.
- * If no web app is registered yet, click "Add app" and pick Web.
+ * These are the same values the member portal already uses, taken
+ * from its own public/js/firebase.js. Both the marketing site and the
+ * portal run on Firebase project `the-1p-leadership`, which is what
+ * makes an account created at class signup the portal's login too.
+ *
+ * If these ever go stale, deleting them is safe: Firebase Hosting
+ * serves the project's live config at the reserved URL
+ * /__/firebase/init.json on every domain it hosts, custom domains
+ * included, and resolveConfig() falls back to that automatically.
  */
 export const firebaseConfig = {
-  apiKey: 'REPLACE_WITH_WEB_API_KEY',
+  apiKey: 'AIzaSyCSZvsExv7O_yjE2UzJ4QQ7lsA4R9zG4_A',
   authDomain: 'the-1p-leadership.firebaseapp.com',
   projectId: 'the-1p-leadership',
   storageBucket: 'the-1p-leadership.firebasestorage.app',
-  messagingSenderId: 'REPLACE_WITH_SENDER_ID',
-  appId: 'REPLACE_WITH_APP_ID'
+  messagingSenderId: '14602661529',
+  appId: '1:14602661529:web:8031e6f7755f757cb45208',
+  measurementId: 'G-RBH536HRZE'
 };
 
 export const FUNCTIONS_REGION = 'us-central1';
@@ -25,6 +31,45 @@ export const FUNCTIONS_REGION = 'us-central1';
 const SDK = 'https://www.gstatic.com/firebasejs/11.2.0';
 
 let cached = null;
+let configCache = null;
+
+/**
+ * Works out which Firebase project this page belongs to.
+ *
+ * Prefers the committed config when someone has filled it in, then
+ * falls back to the copy Firebase Hosting serves itself. Doing it in
+ * that order means a deliberate override always wins, while the normal
+ * case needs no configuration at all.
+ */
+export async function resolveConfig() {
+  if (configCache) return configCache;
+
+  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+    configCache = firebaseConfig;
+    return configCache;
+  }
+
+  try {
+    const res = await fetch('/__/firebase/init.json', { cache: 'force-cache' });
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg?.apiKey && cfg?.projectId) {
+        configCache = cfg;
+        return configCache;
+      }
+    }
+  } catch {
+    // Not served from Firebase Hosting, or offline. Fall through to
+    // the error below so the page can show its own fallback rather
+    // than failing silently.
+  }
+
+  throw new Error(
+    'Firebase is not configured for this page. Register a web app in the Firebase console, ' +
+    'or fill in firebaseConfig in assets/firebase-init.js.'
+  );
+}
+
 
 /**
  * Loads the Firebase modular SDK from the CDN on demand.
@@ -42,7 +87,7 @@ export async function firebase() {
     import(`${SDK}/firebase-functions.js`)
   ]);
 
-  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const app = getApps().length ? getApps()[0] : initializeApp(await resolveConfig());
   const functions = fns.getFunctions(app, FUNCTIONS_REGION);
 
   // Point at the emulator when running locally so the whole flow

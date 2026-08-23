@@ -343,6 +343,21 @@
     </div>
 
     <div class="card">
+      <h3>PORTAL ACCOUNTS</h3>
+      <p class="card-hint">
+        Every signup creates a member portal login in the background and emails the person a link
+        to set their password. Account creation is never allowed to fail a signup, so a bad minute
+        on the portal leaves a lead with no login rather than losing the lead. This goes back and
+        finishes those. Safe to run as often as you like: it skips anyone who already has an
+        account and never touches an existing one.
+      </p>
+      <div class="btn-row">
+        <button class="btn-ghost" id="portal-retry-preview">Check How Many</button>
+        <button class="btn-ghost" id="portal-retry">Create Missing Accounts</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>ACCESS CODES</h3>
       <p class="card-hint">
         A code at 100 percent enrols the person directly without a payment, and without the word "free"
@@ -523,8 +538,9 @@
       ['On The List', (byStage.interest || 0) + (byStage.announced || 0), false],
       ['Waitlist', byStage.waitlist || 0, false],
       ['Paid', paid, true],
-      ['Seats Left', capacity ? Math.max(0, capacity - paid) : '—', false],
-      ['Total Records', s.total || 0, false]
+      ['Seats Left', capacity ? Math.max(0, capacity - paid) : 'no cap', false],
+      ['Total Records', s.total || 0, false],
+      ['No Portal Login', (signups.rows || []).filter((r) => !r.portalUid).length, false]
     ].map(([label, num, red]) =>
       `<div class="stat"><div class="stat-num ${red ? 'red' : ''}">${esc(num)}</div><div class="stat-label">${esc(label)}</div></div>`
     ).join('');
@@ -557,8 +573,8 @@
 
   /* ── Signup sheet ────────────────────────────────────── */
   const COLUMNS = [
-    ['firstName', 'Name'], ['email', 'Email'], ['phone', 'Phone'], ['stage', 'Stage'],
-    ['platform', 'Platform'], ['timing', 'Time'], ['interests', 'Wants'],
+    ['firstName', 'First'], ['lastName', 'Last'], ['email', 'Email'], ['phone', 'Phone'],
+    ['stage', 'Stage'], ['portal', 'Portal'], ['portalProjectId', 'Portal Project'],
     ['source', 'Source'], ['createdAt', 'Signed Up']
   ];
 
@@ -569,7 +585,7 @@
     let rows = signups.rows.filter((r) => {
       if (stage && r.stage !== stage) return false;
       if (!q) return true;
-      return `${r.firstName} ${r.email}`.toLowerCase().includes(q);
+      return `${r.firstName} ${r.lastName} ${r.email}`.toLowerCase().includes(q);
     });
 
     rows.sort((a, b) => {
@@ -583,13 +599,13 @@
 
     $('#sheet tbody').innerHTML = rows.length
       ? rows.map((r) => `<tr>
-          <td>${esc(r.firstName) || '<span class="muted">—</span>'}</td>
+          <td>${esc(r.firstName) || '<span class="muted">not set</span>'}</td>
+          <td>${esc(r.lastName) || '<span class="muted">not set</span>'}</td>
           <td>${esc(r.email)}${r.unsubscribed ? ' <span class="pill">unsub</span>' : ''}</td>
-          <td>${esc(r.phone) || '<span class="muted">—</span>'}</td>
+          <td>${esc(r.phone) || '<span class="muted">not set</span>'}</td>
           <td><span class="pill ${esc(r.stage)}">${esc(r.stage)}</span></td>
-          <td>${esc(r.answers.platform || '')}</td>
-          <td>${esc(r.answers.timing || '')}</td>
-          <td>${esc((r.answers.interests || []).join(', '))}</td>
+          <td>${portalCell(r)}</td>
+          <td class="muted" style="font-size:11px;">${esc(r.portalProjectId) || '<span class="muted">unknown</span>'}</td>
           <td class="muted">${esc(r.utm.utm_source || r.source || '')}</td>
           <td class="muted">${r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString()) : ''}</td>
         </tr>`).join('')
@@ -606,9 +622,26 @@
     });
   }
 
+  /* Whether the portal login actually got made. This is the column
+     that catches a misconfigured portal target: if PORTAL_SERVICE_ACCOUNT
+     is unset and the portal is a separate Firebase project, accounts
+     land in the wrong place, and the Portal Project column next to
+     this one shows which project they went to. */
+  function portalCell(r) {
+    if (r.portalError) return `<span class="pill" style="border-color:var(--red);color:var(--red)" title="${esc(r.portalError)}">failed</span>`;
+    if (!r.portalUid) return '<span class="pill">none</span>';
+    return r.portalCreated
+      ? '<span class="pill paid">created</span>'
+      : '<span class="pill announced">existing</span>';
+  }
+
   const cell = (row, key) =>
-    ({ platform: row.answers.platform, timing: row.answers.timing, interests: (row.answers.interests || []).join(',') }[key]) ??
-    row[key] ?? '';
+    ({
+      portal: row.portalError ? 'failed' : row.portalUid ? (row.portalCreated ? 'created' : 'existing') : 'none',
+      platform: row.answers.platform,
+      timing: row.answers.timing,
+      interests: (row.answers.interests || []).join(',')
+    }[key]) ?? row[key] ?? '';
 
   $('#search').addEventListener('input', renderSheet);
   $('#stage-filter').addEventListener('change', renderSheet);
@@ -993,6 +1026,30 @@
 
   $('#portal-send').addEventListener('click', () => sendPortal(false));
   $('#portal-resend').addEventListener('click', () => sendPortal(true));
+
+  $('#portal-retry-preview').addEventListener('click', async () => {
+    try {
+      const r = await callFn('retryPortalAccounts', { slug: current.slug, dryRun: true });
+      toast(r.recipientCount
+        ? `${r.recipientCount} signups have no portal account yet.`
+        : 'Every signup already has a portal account.');
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  $('#portal-retry').addEventListener('click', async () => {
+    try {
+      const preview = await callFn('retryPortalAccounts', { slug: current.slug, dryRun: true });
+      if (!preview.recipientCount) return toast('Nothing to do. Every signup already has an account.');
+      const ok = await confirmDialog('Create the missing portal accounts?',
+        `This creates logins for <strong>${preview.recipientCount} people</strong> and emails anyone
+         who has not already had a working welcome.`);
+      if (!ok) return;
+      const r = await callFn('retryPortalAccounts', { slug: current.slug });
+      toast(`${r.fixed} created${r.failed ? `, ${r.failed} still failing` : ''}.`, r.failed > 0);
+      if (r.failed && r.errors?.length) console.error('Portal retry failures', r.errors);
+      await refreshSignups();
+    } catch (err) { toast(readableError(err), true); }
+  });
 </script>
 </body>
 </html>

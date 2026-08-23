@@ -16,6 +16,7 @@ import {
 import { resolvePricing, resolveAvailability, checkoutBlockedReason, formatMoney } from './lib/pricing.js';
 import { pushToGoHighLevel } from './lib/ghl.js';
 import { buildIcs } from './lib/ics.js';
+import { createPortalAccount } from './lib/portal.js';
 import { send, sendBatch, verifyUnsubscribeToken } from './lib/mail.js';
 import * as tpl from './emails/templates.js';
 
@@ -94,7 +95,9 @@ export const submitSignup = onCall(
 
     const email = normaliseEmail(data.email);
     const firstName = clean(data.firstName, 80);
+    const lastName = clean(data.lastName, 80);
     if (!firstName) bad('Please tell us your first name.');
+    if (!lastName) bad('Please tell us your last name.');
     if (!isEmail(email)) bad('Please enter a valid email address.');
 
     const { answers, errors } = validateAnswers(cls.formFields || [], data.answers || {});
@@ -114,8 +117,12 @@ export const submitSignup = onCall(
     const attribution = cleanAttribution(data.attribution || {});
 
     const phone = cleanPhone(data.phone);
+    // Phone is required now: it is part of the portal account and of
+    // how Anthony reaches people with the class dates.
+    if (!phone) bad('Please enter a phone number so we can send you the class details.');
     const record = {
       firstName,
+      lastName,
       email,
       // Only write the phone when one was actually given. Someone
       // resubmitting the form without it should not have the number
@@ -160,16 +167,38 @@ export const submitSignup = onCall(
 
     const signup = { ...record, phone: phone || existing.data()?.phone || '', stage, slug };
 
-    // CRM mirror and confirmation email run in parallel, and
-    // neither is allowed to fail the request. The signup is already
-    // durable in Firestore; a CRM hiccup is a flag to retry, not a
-    // reason to show this person an error.
+    /* The portal account is created before the email, because the
+       email carries the set-password link and there is nothing to
+       link to until the account exists.
+       
+       It is deliberately not allowed to fail the request. The signup
+       is already durable in Firestore at this point, and someone who
+       filled in a form to join a class must never be shown an error
+       because an account provisioning step had a bad minute. A
+       failure is recorded on the record and Anthony can resend. */
+    let portal = null;
+    try {
+      portal = await createPortalAccount({
+        firstName,
+        lastName,
+        email,
+        phone,
+        classSlug: slug,
+        className: cls.name,
+        profileConfig: cls._private?.portal
+      });
+    } catch (err) {
+      logger.error('Portal account creation failed', { slug, id, error: String(err?.message || err) });
+    }
+
+    // CRM mirror and the welcome email run in parallel, and neither
+    // is allowed to fail the request either, for the same reason.
     const [ghlResult, mailResult] = await Promise.allSettled([
       pushToGoHighLevel(signup, cls),
       (async () => {
         const { subject, html } = isWaitlist
           ? tpl.waitlistConfirmation(signup, cls)
-          : tpl.interestConfirmation(signup, cls, pricing);
+          : tpl.welcomeAndInterest(signup, cls, pricing, portal?.setPasswordLink || null);
         return send({ to: email, subject, html, categories: ['class-interest', slug] });
       })()
     ]);
@@ -177,13 +206,24 @@ export const submitSignup = onCall(
     const ghlOk = ghlResult.status === 'fulfilled' && ghlResult.value?.ok;
     const mailOk = mailResult.status === 'fulfilled' && mailResult.value?.ok;
     if (!ghlOk) logger.warn('GoHighLevel sync failed', { slug, id, result: ghlResult });
-    if (!mailOk) logger.warn('Confirmation email failed', { slug, id, result: mailResult });
+    if (!mailOk) logger.warn('Welcome email failed', { slug, id, result: mailResult });
 
     await ref.set(
       {
         ghlSynced: ghlOk,
+        // portalProjectId is the tell for a misconfigured portal
+        // target. If the portal is a separate Firebase project and
+        // no portal override was set, this shows this
+        // project's id and the account is in the wrong place. The
+        // admin console surfaces it for exactly that reason.
+        portalCreated: Boolean(portal?.created),
+        portalLinked: Boolean(portal?.uid),
+        portalUid: portal?.uid || null,
+        portalProjectId: portal?.projectId || null,
+        portalError: portal ? null : 'account creation failed',
+        portalInvited: mailOk && Boolean(portal?.setPasswordLink),
         emailLog: FieldValue.arrayUnion({
-          type: isWaitlist ? 'waitlist' : 'interest-confirmation',
+          type: isWaitlist ? 'waitlist' : 'welcome',
           ok: mailOk,
           at: new Date().toISOString()
         })
@@ -534,6 +574,91 @@ export const announceClass = onCall(
   }
 );
 
+/**
+ * Retries portal account creation for anyone whose signup created a
+ * record but no login.
+ *
+ * Account creation is deliberately never allowed to fail a signup, so
+ * a bad minute on the portal project produces a lead with no login
+ * rather than a lost lead. This is the other half of that bargain:
+ * the tool that goes back and finishes the job.
+ *
+ * Safe to run repeatedly. It skips anyone who already has a uid, and
+ * createPortalAccount never overwrites an existing account.
+ */
+export const retryPortalAccounts = onCall(
+  {
+    ...callOpts,
+    secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET],
+    timeoutSeconds: 540
+  },
+  async (request) => {
+    const uid = assertAdmin(request);
+    const slug = clean(request.data?.slug, 80);
+    if (!slug) bad('A class slug is required.');
+
+    const cls = await loadClass(slug);
+    if (!cls) throw new HttpsError('not-found', 'That class does not exist.');
+
+    const snap = await signupsRef(slug).get();
+    const targets = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((s) => s.email && !s.portalUid);
+
+    if (request.data?.dryRun) return { dryRun: true, recipientCount: targets.length };
+
+    const pricing = resolvePricing(cls);
+    let fixed = 0;
+    const failures = [];
+
+    for (const s of targets) {
+      try {
+        const portal = await createPortalAccount({
+          firstName: s.firstName,
+          lastName: s.lastName,
+          email: s.email,
+          phone: s.phone,
+          classSlug: slug,
+          className: cls.name,
+          profileConfig: cls._private?.portal
+        });
+
+        // Only email people who did not already get a working welcome.
+        let mailOk = false;
+        if (!s.portalInvited && !s.unsubscribed) {
+          const { subject, html } = tpl.welcomeAndInterest(
+            { ...s, slug }, cls, pricing, portal.setPasswordLink
+          );
+          mailOk = (await send({ to: s.email, subject, html, categories: ['class-portal', slug] })).ok;
+        }
+
+        await signupsRef(slug).doc(s.id).set({
+          portalUid: portal.uid,
+          portalCreated: portal.created,
+          portalLinked: true,
+          portalProjectId: portal.projectId,
+          portalError: null,
+          portalInvited: s.portalInvited || mailOk,
+          updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+        fixed++;
+      } catch (err) {
+        const message = String(err?.message || err);
+        failures.push({ email: s.email, error: message });
+        await signupsRef(slug).doc(s.id).set({ portalError: message }, { merge: true });
+      }
+    }
+
+    await db.collection('sendLog').add({
+      type: 'portal-retry', slug, by: uid, at: FieldValue.serverTimestamp(),
+      attempted: targets.length, fixed, failed: failures.length
+    });
+    logger.info('Portal retry finished', { slug, attempted: targets.length, fixed, failed: failures.length });
+
+    return { attempted: targets.length, fixed, failed: failures.length, errors: failures.slice(0, 10) };
+  }
+);
+
 /** Portal instructions for anyone who paid but has not been invited. */
 export const sendPortalPrep = onCall(
   { ...callOpts, secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET], timeoutSeconds: 540 },
@@ -587,9 +712,14 @@ export const listSignups = onCall(callOpts, async (request) => {
     return {
       id: d.id,
       firstName: s.firstName || '',
+      lastName: s.lastName || '',
       email: s.email || '',
       phone: s.phone || '',
       stage: s.stage || 'interest',
+      portalUid: s.portalUid || '',
+      portalCreated: !!s.portalCreated,
+      portalProjectId: s.portalProjectId || '',
+      portalError: s.portalError || '',
       answers: s.answers || {},
       consent: { sms: !!s.consent?.sms, marketing: !!s.consent?.marketing },
       utm: s.utm || {},
@@ -635,7 +765,7 @@ export const exportSignups = onCall(callOpts, async (request) => {
   ]);
   const fields = clsSnap.data()?.formFields || [];
   const headers = [
-    'First Name', 'Email', 'Phone', 'Stage',
+    'First Name', 'Last Name', 'Email', 'Phone', 'Stage', 'Portal Account', 'Portal Project',
     ...fields.map((f) => f.label || f.id),
     'SMS Consent', 'Marketing Consent', 'Source', 'UTM Source', 'UTM Campaign',
     'Amount Paid', 'Access Code', 'Signed Up'
@@ -648,7 +778,9 @@ export const exportSignups = onCall(callOpts, async (request) => {
     const s = doc.data();
     lines.push(
       [
-        s.firstName, s.email, s.phone, s.stage,
+        s.firstName, s.lastName, s.email, s.phone, s.stage,
+        s.portalUid ? (s.portalCreated ? 'created' : 'existing') : (s.portalError ? 'FAILED' : ''),
+        s.portalProjectId || '',
         ...fields.map((f) => {
           const v = s.answers?.[f.id];
           return Array.isArray(v) ? v.join('; ') : v || '';

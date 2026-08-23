@@ -478,11 +478,11 @@
           </div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" type="button">Do I have to create an account to join the list?</button>
+          <button class="faq-q" type="button">What do I have to fill in?</button>
           <div class="faq-a"><div class="faq-a-inner">
-            No. Joining the interest list takes your first name, your email, and one question.
-            Nothing else. Portal access gets set up later, once you enrol, and I will walk you
-            through it then.
+            Your name, your email, and a phone number. That is the whole form. Your member portal
+            access is set up for you at the same time, so the only thing left is choosing a
+            password from the link in your welcome email.
           </div></div>
         </div>
         <div class="faq-item">
@@ -529,25 +529,32 @@
 
         <div class="no-account">
           <span>◆</span>
-          <span>No account needed today. Two questions and you are done.</span>
+          <span>Four fields. That is the whole thing.</span>
         </div>
 
         <div class="form-row">
           <div class="field">
             <label class="field-label" for="firstName">First Name <span class="field-required">*</span></label>
-            <input class="field-input" type="text" id="firstName" name="firstName" placeholder="Your first name" autocomplete="given-name">
+            <input class="field-input" type="text" id="firstName" name="firstName" placeholder="First name" autocomplete="given-name">
             <div class="field-error">Please enter your first name.</div>
           </div>
           <div class="field">
-            <label class="field-label" for="email">Email <span class="field-required">*</span></label>
-            <input class="field-input" type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
-            <div class="field-error">Please enter a valid email address.</div>
+            <label class="field-label" for="lastName">Last Name <span class="field-required">*</span></label>
+            <input class="field-input" type="text" id="lastName" name="lastName" placeholder="Last name" autocomplete="family-name">
+            <div class="field-error">Please enter your last name.</div>
           </div>
         </div>
 
         <div class="field">
-          <label class="field-label" for="phone">Phone <span class="field-optional">optional, for reminders</span></label>
-          <input class="field-input" type="tel" id="phone" name="phone" placeholder="+1 (555) 000-0000" autocomplete="tel">
+          <label class="field-label" for="email">Email <span class="field-required">*</span></label>
+          <input class="field-input" type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
+          <div class="field-error">Please enter a valid email address.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="phone">Phone <span class="field-required">*</span></label>
+          <input class="field-input" type="tel" id="phone" name="phone" placeholder="(555) 000-0000" autocomplete="tel">
+          <div class="field-error">Please enter a phone number we can reach you on.</div>
         </div>
 
         <!-- Schema-driven fields render here, from the class doc -->
@@ -569,6 +576,10 @@
           <span>→</span>
         </button>
 
+        <p class="form-legal">
+          Your seat and your member portal access are set up together. Check your email to
+          finish setting up your login.
+        </p>
         <p class="form-legal">
           Your information is protected and never sold. By joining you agree to our
           <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Service</a>.
@@ -600,10 +611,10 @@
         <div class="success-icon">✓</div>
         <div class="success-title">You're <span class="red">on the list</span></div>
         <div class="success-desc" data-success-desc>
-          Check your email for confirmation. When the dates are set you will hear from me
-          before anyone else, with the first chance to claim a seat.
+          Check your email. Your confirmation is there along with the link to finish setting up
+          your member portal login. When the dates are set you will hear from me before anyone else.
         </div>
-        <div class="success-next">Nothing else to do right now</div>
+        <div class="success-next">One email, one link, then you are set</div>
       </div>
     </div>
   </aside>

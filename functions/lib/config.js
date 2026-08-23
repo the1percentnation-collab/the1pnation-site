@@ -15,6 +15,21 @@ export const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY');
 //   firebase functions:secrets:set UNSUBSCRIBE_SECRET
 export const UNSUBSCRIBE_SECRET = defineSecret('UNSUBSCRIBE_SECRET');
 
+// Not a declared secret, and not needed for the current setup.
+//
+// The portal shares this Firebase project, so an account created by a
+// class signup already is the portal login.
+//
+// It is read from the plain environment rather than declared with
+// defineSecret because Firebase fails a deploy when any DECLARED
+// secret is missing from Secret Manager. Declaring one that is
+// deliberately never set would block every deploy.
+//
+// Only needed if a portal ever moves to a separate Firebase project,
+// which would give it a separate user list. To use it then, set it as
+// a function environment variable holding that project's service
+// account JSON.
+
 // Non-secret configuration. Override per environment in .env files
 // or with `firebase functions:config`. Defaults match production.
 export const SITE_URL = defineString('SITE_URL', { default: 'https://the1pnation.com' });
