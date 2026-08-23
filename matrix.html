@@ -66,6 +66,22 @@
     }
     .hero-title .red { color: var(--red); }
     .hero-title .outline { -webkit-text-stroke: 1px rgba(255,255,255,0.25); color: transparent; }
+    /* Neon-sign flicker on MATRIX: at rest it keeps the gray outline above;
+       twice per cycle the stroke snaps red with a brief glow, then snaps
+       back. step-end holds each value hard, so it blinks instead of fading. */
+    .hero-title .outline { animation: matrix-flicker 7s step-end infinite; }
+    @keyframes matrix-flicker {
+      0%, 81%, 100% { -webkit-text-stroke-color: rgba(255,255,255,0.25); text-shadow: none; }
+      81.4% { -webkit-text-stroke-color: rgba(230,3,6,0.9); text-shadow: 0 0 16px rgba(230,3,6,0.5); }
+      82%   { -webkit-text-stroke-color: rgba(255,255,255,0.25); text-shadow: none; }
+      82.4% { -webkit-text-stroke-color: rgba(230,3,6,0.9); text-shadow: 0 0 16px rgba(230,3,6,0.5), 0 0 40px rgba(230,3,6,0.3); }
+      83.6% { -webkit-text-stroke-color: rgba(255,255,255,0.25); text-shadow: none; }
+      90.4% { -webkit-text-stroke-color: rgba(230,3,6,0.75); text-shadow: 0 0 14px rgba(230,3,6,0.4); }
+      91%   { -webkit-text-stroke-color: rgba(255,255,255,0.25); text-shadow: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-title .outline { animation: none; }
+    }
     .hero-sub { font-size: 19px; font-weight: 300; color: var(--gray-400); line-height: 1.7; max-width: 620px; }
     .hero-meta {
       margin-top: 28px; display: flex; gap: 28px; flex-wrap: wrap;
