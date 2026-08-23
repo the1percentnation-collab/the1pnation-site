@@ -1,0 +1,71 @@
+// ============================================================
+// NOT DEPLOYED. This is a snippet to MERGE, not a ruleset.
+// ============================================================
+//
+// Firestore rules are project-wide and there is exactly one ruleset
+// per Firebase project. The member portal repo
+// (the1percentnation-collab/the-1p-leadership) owns this project's
+// firestore.rules, and its file is 859 lines governing users,
+// companies, posts, channels, contacts, campaigns and more.
+//
+// This file used to be deployed from here. That was a serious
+// mistake: deploying it would have REPLACED all 859 lines with these
+// few, and the catch-all `allow read, write: if false` at the end
+// would have locked every portal member out of their own data. It
+// only never happened because the deploy failed on permissions first.
+//
+// The deploy step is gone and firebase.json no longer declares a
+// firestore config, so nothing here can overwrite that ruleset again.
+//
+// ── WHAT NEEDS THIS ─────────────────────────────────────────
+// Nothing in the signup flow. matrix.html reads class state and
+// submits through the getClassState and submitSignup callables, and
+// callables run on the Admin SDK, which bypasses rules entirely.
+// Signups work with none of this in place.
+//
+// Two pages do read Firestore directly and stay broken until these
+// blocks are merged into the portal repo's firestore.rules, inside
+// its existing `match /databases/{database}/documents { ... }`:
+//   class.html  reads classes/{slug} to render a class
+//   admin.html  reads and writes classes and their private config
+//
+// Paste the blocks below in, keeping the portal's own isAdmin() or
+// substituting its equivalent, and deploy rules from THAT repo.
+// ============================================================
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Published class copy. Public read so matrix.html and
+    // class.html can render without an account. Writes are admin
+    // only, and counters (seatsPaid, interestCount) are written by
+    // Cloud Functions via the Admin SDK, which bypasses these rules.
+    match /classes/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Private per-class config: GoHighLevel form id, email
+      // templates, Stripe ids, access codes. Admin only, and
+      // deliberately a subcollection because rules cannot hide
+      // individual fields on a publicly readable document.
+      match /private/{doc} {
+        allow read, write: if isAdmin();
+      }
+
+      // Signups. Locked completely. Reads for the admin console go
+      // through the listSignups callable, not through the client
+      // SDK, so that even a compromised admin session cannot bulk
+      // export without hitting a function that logs the access.
+      match /signups/{id} {
+        allow read, write: if false;
+      }
+    }
+
+    // Audit trail of admin sends (announcements, portal prep).
+    // Written by functions, readable by admin so the console can
+    // show what already went out and to how many people.
+    match /sendLog/{entry} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
