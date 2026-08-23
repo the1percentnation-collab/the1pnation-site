@@ -191,9 +191,30 @@ every rule in it exists because of a specific way this repo nearly took the
 portal down.
 
 ### 4. SendGrid
-Create the API key, then **authenticate your sending domain**. Domain
-authentication matters more than the key itself; unauthenticated mail lands in
-spam.
+Create the API key, then do the two things that actually decide whether mail
+arrives.
+
+**Verify the sender.** SendGrid refuses to send from an address it has not
+verified, with `The from address does not match a verified Sender Identity`. The
+from address is set by `FROM_EMAIL` in `functions/.env`, currently
+`anthony@the1pnation.com`. Either verify that exact address under Settings,
+Sender Authentication, Single Sender Verification, or change `FROM_EMAIL` to one
+already verified.
+
+**Authenticate the domain.** Settings, Sender Authentication, Authenticate Your
+Domain, then add the CNAME records it gives you at your DNS host. Without this
+mail that does send often lands in spam, and the welcome email carries the
+password link, so spam means people cannot get into the portal.
+
+**To see why a send failed**, either check the Welcome Email column on the signup
+sheet in `/admin`, which shows SendGrid's own message on hover, or open
+<https://console.firebase.google.com/project/the-1p-leadership/functions/logs>
+and filter to `submitSignup`. A failure logs as `Welcome email failed` with the
+reason attached.
+
+A failed email never fails a signup. The record, the CRM sync, and the portal
+account are all created regardless, so nothing is lost while this is being sorted
+out.
 
 ### 5. Stripe
 Add the webhook endpoint pointing at:

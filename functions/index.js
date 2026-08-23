@@ -205,8 +205,19 @@ export const submitSignup = onCall(
 
     const ghlOk = ghlResult.status === 'fulfilled' && ghlResult.value?.ok;
     const mailOk = mailResult.status === 'fulfilled' && mailResult.value?.ok;
+
+    // Keep the reason, not just the fact. A welcome email that silently
+    // fails is invisible until someone says they never got one, and by
+    // then the log may have rotated. SendGrid's own message names the
+    // cause, most often an unverified sender identity.
+    const mailError = mailOk
+      ? null
+      : (mailResult.status === 'fulfilled'
+          ? mailResult.value?.error
+          : String(mailResult.reason?.message || mailResult.reason)) || 'unknown';
+
     if (!ghlOk) logger.warn('GoHighLevel sync failed', { slug, id, result: ghlResult });
-    if (!mailOk) logger.warn('Welcome email failed', { slug, id, result: mailResult });
+    if (!mailOk) logger.error('Welcome email failed', { slug, id, email, error: mailError });
 
     await ref.set(
       {
@@ -222,9 +233,11 @@ export const submitSignup = onCall(
         portalProjectId: portal?.projectId || null,
         portalError: portal ? null : 'account creation failed',
         portalInvited: mailOk && Boolean(portal?.setPasswordLink),
+        lastEmailError: mailError,
         emailLog: FieldValue.arrayUnion({
           type: isWaitlist ? 'waitlist' : 'welcome',
           ok: mailOk,
+          ...(mailError ? { error: String(mailError).slice(0, 300) } : {}),
           at: new Date().toISOString()
         })
       },
@@ -720,6 +733,7 @@ export const listSignups = onCall(callOpts, async (request) => {
       portalCreated: !!s.portalCreated,
       portalProjectId: s.portalProjectId || '',
       portalError: s.portalError || '',
+      lastEmailError: s.lastEmailError || '',
       answers: s.answers || {},
       consent: { sms: !!s.consent?.sms, marketing: !!s.consent?.marketing },
       utm: s.utm || {},
