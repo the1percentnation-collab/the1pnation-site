@@ -54,9 +54,14 @@ jobs:
       #
       # Each step carries its own condition so a failure in one does
       # not skip the other.
-      - name: Deploy hosting
-        if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
-        run: npx --yes firebase-tools@13 deploy --only hosting --project the-1p-leadership --non-interactive
+      # Hosting is NOT deployed from this repo. The member portal repo
+      # (the1percentnation-collab/The-1P-Leadership) owns the hosting
+      # site and carries every page, including this repo's class funnel
+      # and the matrix mastermind page. Both repos deploying hosting to
+      # the same site meant each deploy replaced the other's pages —
+      # deploys from here wiped the portal's login and dashboard off
+      # the live site between Aug 22 and 23. Page edits belong in the
+      # portal repo's public/ directory now.
 
       # Scoped to the `classes` codebase, and that scoping is load
       # bearing. The member portal (repo the-1p-leadership) deploys 53
