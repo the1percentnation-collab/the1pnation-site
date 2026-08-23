@@ -25,6 +25,13 @@ jobs:
         working-directory: functions
         run: npm install
 
+      # Refuses to continue if this repo is configured in a way that
+      # could damage the member portal, which shares this Firebase
+      # project. See scripts/check-deploy-safety.mjs. This runs BEFORE
+      # authentication so a bad config cannot reach the project at all.
+      - name: Deploy safety checks
+        run: node scripts/check-deploy-safety.mjs
+
       - name: Authenticate to Firebase
         id: auth
         run: |

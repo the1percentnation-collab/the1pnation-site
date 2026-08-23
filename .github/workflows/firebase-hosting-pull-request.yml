@@ -19,6 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Catches a portal-damaging config at review time rather than
+      # after it has been merged to main.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Deploy safety checks
+        run: node scripts/check-deploy-safety.mjs
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

@@ -176,6 +176,20 @@ never add `--force`.** If you ever see a deploy listing portal function names
 under "found in your project but do not exist in your local source code", stop
 and check the codebase setting rather than accepting the deletion.
 
+**This is enforced, not just documented.** `scripts/check-deploy-safety.mjs`
+runs before every deploy and on every pull request, and fails the build if:
+
+- `firebase.json` declares a `firestore` config
+- a deployable `firestore.rules` or `firestore.indexes.json` appears at the root
+- the functions codebase is anything other than `classes`
+- a workflow passes `--force`
+- a workflow deploys `--only functions` unscoped, or `--only ...firestore`
+
+Each check was verified by reintroducing the exact regression and confirming the
+build stops. If it ever blocks you, read what it says before working around it:
+every rule in it exists because of a specific way this repo nearly took the
+portal down.
+
 ### 4. SendGrid
 Create the API key, then **authenticate your sending domain**. Domain
 authentication matters more than the key itself; unauthenticated mail lands in
