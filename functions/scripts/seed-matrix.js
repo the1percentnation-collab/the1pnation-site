@@ -63,6 +63,10 @@ const formFields = [
 
 const publicDoc = {
   name: 'The Social Media Matrix',
+  // This class is sold on its own designed page, not the generic renderer.
+  // Everything that links to a class reads this: the console's View Page
+  // button, the announcement email's checkout link, and Stripe's cancel URL.
+  pageUrl: '/matrix',
   tagline: 'A four session mastermind for people who were handed the platforms and never handed the rules.',
   status: 'interest',
 
@@ -175,6 +179,19 @@ const existing = await ref.get();
    asked for explicitly. */
 if (existing.exists && process.env.FORCE !== '1') {
   const d = existing.data();
+
+  /* One exception to leaving an existing class alone: pageUrl.
+     This class has always been sold on its own designed page at /matrix,
+     but the field that records that was added later, so the live doc has
+     no value and every generated link — the console's View Page button,
+     the announcement email's checkout link, both Stripe cancel URLs —
+     fell back to the generic renderer. Set it if and only if it is
+     missing; never touch a value someone has chosen. */
+  if (!d.pageUrl && publicDoc.pageUrl) {
+    await ref.set({ pageUrl: publicDoc.pageUrl }, { merge: true });
+    console.log(`classes/${SLUG}: backfilled pageUrl = ${publicDoc.pageUrl}`);
+  }
+
   console.log(`classes/${SLUG} already exists. Leaving it untouched.`);
   console.log(`  name          : ${d.name}`);
   console.log(`  status        : ${d.status}`);

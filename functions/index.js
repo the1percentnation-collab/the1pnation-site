@@ -13,7 +13,7 @@ import {
   clean, cleanPhone, isEmail, looksAutomated, validateAnswers,
   cleanAttribution, assertAdmin, bad
 } from './lib/validate.js';
-import { resolvePricing, resolveAvailability, checkoutBlockedReason, formatMoney } from './lib/pricing.js';
+import { resolvePricing, resolveAvailability, checkoutBlockedReason, formatMoney, classPageUrl } from './lib/pricing.js';
 import { pushToGoHighLevel } from './lib/ghl.js';
 import { buildIcs } from './lib/ics.js';
 import { createPortalAccount } from './lib/portal.js';
@@ -308,7 +308,7 @@ export const startCheckout = onCall(
       ],
       metadata: { slug, signupId: id },
       success_url: `${SITE_URL.value()}/enrolled.html?c=${encodeURIComponent(slug)}&s={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL.value()}/class.html?c=${encodeURIComponent(slug)}`
+      cancel_url: classPageUrl(cls, slug, SITE_URL.value())
     });
 
     await ref.set({ stripe: { sessionId: session.id }, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
@@ -413,7 +413,7 @@ export const redeemAccessCode = onCall(
       ],
       metadata: { slug, signupId: id, accessCode: code, percentOff: String(percentOff) },
       success_url: `${SITE_URL.value()}/enrolled.html?c=${encodeURIComponent(slug)}&s={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL.value()}/class.html?c=${encodeURIComponent(slug)}`
+      cancel_url: classPageUrl(cls, slug, SITE_URL.value())
     });
 
     await ref.set(
@@ -534,7 +534,7 @@ export const announceClass = onCall(
     if (dryRun) return { dryRun: true, recipientCount: targets.length };
 
     const pricing = resolvePricing(cls);
-    const checkoutUrl = `${SITE_URL.value()}/class.html?c=${encodeURIComponent(slug)}#enroll`;
+    const checkoutUrl = classPageUrl(cls, slug, SITE_URL.value(), '#enroll');
 
     const ics = buildIcs({
       sessions: cls.schedule.sessions,

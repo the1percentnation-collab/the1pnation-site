@@ -238,6 +238,14 @@
             <input class="field-input" id="b-tagline">
           </div>
           <div class="field">
+            <label class="field-label" for="b-page">Public Page <span class="field-optional">leave blank to use the standard class page</span></label>
+            <input class="field-input" id="b-page" placeholder="/matrix" autocomplete="off" spellcheck="false">
+            <p class="card-hint" style="margin-top:6px;">
+              Where View Page, the announcement email's checkout link, and Stripe's cancel
+              button all send people. Set it when a class has its own designed page.
+            </p>
+          </div>
+          <div class="field">
             <label class="field-label" for="b-pain">Pain Point</label>
             <textarea class="field-textarea" id="b-pain"></textarea>
           </div>
@@ -540,7 +548,7 @@
       getDoc(doc(db, 'classes', slug, 'private', 'config'))
     ]);
     current = { slug, data: pub.data() || {}, privateData: priv.exists() ? priv.data() : {} };
-    $('#view-page').href = `/class.html?c=${encodeURIComponent(slug)}`;
+    $('#view-page').href = classPagePath(current.data, slug);
 
     fillBuilder();
     renderCodes();
@@ -708,10 +716,29 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  // A pasted full URL, a bare slug, or a path all mean the same thing. Store a
+  // site-relative path; empty means "no bespoke page, use the generic renderer".
+  function normalisePagePath(raw) {
+    let v = String(raw || '').trim();
+    if (!v) return null;
+    v = v.replace(/^https?:\/\/[^/]+/i, '');   // drop an origin if one was pasted
+    if (!v.startsWith('/')) v = '/' + v;
+    return v.replace(/\s+/g, '') || null;
+  }
+
+  // The one place that decides where a class's public page lives. Mirrors
+  // classPageUrl() in the classes functions, which the emails and Stripe
+  // cancel URLs use — they must agree or the links diverge again.
+  function classPagePath(data, slug) {
+    return normalisePagePath(data && data.pageUrl)
+      || `/class.html?c=${encodeURIComponent(slug)}`;
+  }
+
   function fillBuilder() {
     const d = current.data;
     $('#b-name').value = d.name || '';
     $('#b-tagline').value = d.tagline || '';
+    $('#b-page').value = d.pageUrl || '';
     $('#b-pain').value = d.painPoint || '';
     $('#b-outcomes').value = (d.outcomes || []).join('\n');
     $('#b-price').value = d.price?.amount ? d.price.amount / 100 : '';
@@ -896,6 +923,7 @@
     return {
       name: $('#b-name').value.trim(),
       tagline: $('#b-tagline').value.trim(),
+      pageUrl: normalisePagePath($('#b-page').value),
       painPoint: $('#b-pain').value.trim(),
       outcomes: $('#b-outcomes').value.split('\n').map((s) => s.trim()).filter(Boolean),
       sessions,

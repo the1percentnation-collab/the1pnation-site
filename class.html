@@ -109,6 +109,7 @@
     loading.textContent = 'No class specified.';
   } else {
     try {
+      // (see redirectToClassPage below for the bespoke-page bounce)
       // Marketing copy comes straight from the public class doc;
       // price and availability come from the callable, because
       // those two have to match what the server will honour.
@@ -121,11 +122,55 @@
       if (!snap.exists()) throw new Error('That class does not exist.');
 
       const cls = snap.data();
+
+      // A class with its own designed page is sold there, not here. Bounce
+      // before rendering or calling getClassState, so nobody sees a flash of
+      // the generic page and no needless request goes out. Old links, sent
+      // emails, and bookmarks all land in the right place.
+      if (redirectToClassPage(cls)) return;
+
       const state = await callFn('getClassState', { slug });
       render(cls, state);
     } catch (err) {
       loading.innerHTML = esc(readableError(err));
     }
+  }
+
+  /**
+   * Send the visitor to the class's own page when it has one.
+   *
+   * Returns true when a redirect was started, so the caller stops.
+   *
+   * The loop guard matters: this page is reachable as /class and /class.html,
+   * and a pageUrl pointing back at either would bounce forever. Compare
+   * pathnames with .html normalised away, and refuse any target that resolves
+   * to this renderer.
+   */
+  function redirectToClassPage(cls) {
+    const raw = cls && typeof cls.pageUrl === 'string' ? cls.pageUrl.trim() : '';
+    if (!raw) return false;
+
+    let target;
+    try {
+      target = new URL(raw, location.origin);
+    } catch (err) {
+      return false;                       // unparseable path: render here
+    }
+    if (target.origin !== location.origin) return false;
+
+    const bare = (p) => p.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    if (bare(target.pathname) === bare(location.pathname)) return false;
+    if (bare(target.pathname) === '/class') return false;
+
+    // Carry everything the visitor arrived with except the class selector,
+    // which only means something to this page — so ?promo= and #enroll survive.
+    const params = new URLSearchParams(location.search);
+    params.delete('c');
+    params.forEach((value, key) => target.searchParams.set(key, value));
+    if (location.hash) target.hash = location.hash;
+
+    location.replace(target.toString());
+    return true;
   }
 
   function render(cls, state) {

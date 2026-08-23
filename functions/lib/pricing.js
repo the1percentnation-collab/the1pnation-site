@@ -69,3 +69,25 @@ export function checkoutBlockedReason(cls, now = Date.now()) {
 export const formatMoney = (cents, currency = 'usd') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase(), minimumFractionDigits: 0 })
     .format((Number(cents) || 0) / 100);
+
+/**
+ * Where a class's public page lives.
+ *
+ * Most classes are rendered by the generic class.html; a flagship like the
+ * Social Media Matrix has its own designed page, recorded as `pageUrl` on the
+ * class doc (a site-relative path, set in the Class Console's Class Builder).
+ *
+ * Everything that hands someone a link to a class goes through here — the
+ * announcement email's checkout link and both Stripe cancel URLs — so a class
+ * cannot end up advertised on one page and sold on another. The Class Console's
+ * classPagePath() is the browser-side twin of this.
+ *
+ * `path` appends onto whichever page wins (e.g. '#enroll').
+ */
+export function classPageUrl(cls, slug, siteUrl, path = '') {
+  const raw = cls && typeof cls.pageUrl === 'string' ? cls.pageUrl.trim() : '';
+  const page = raw
+    ? (raw.startsWith('/') ? raw : `/${raw}`)
+    : `/class.html?c=${encodeURIComponent(slug)}`;
+  return `${siteUrl}${page}${path}`;
+}
