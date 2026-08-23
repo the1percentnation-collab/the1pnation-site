@@ -14,21 +14,26 @@ import { PORTAL_SERVICE_ACCOUNT, PORTAL_URL } from './config.js';
  * about it and hands them a link to set their own password.
  *
  * WHICH PROJECT
- * The site runs in Firebase project `the-1p-leadership`. The portal
- * lives at `the1p-leadership.web.app`, which is a different name and
- * therefore almost certainly a different project with its own user
- * pool. Creating a user in this project would not create a portal
- * login.
+ * The portal is a separate REPO (the1percentnation-collab/the-1p-leadership,
+ * served from the1p-leadership.web.app) but its .firebaserc and its
+ * public/js/firebase.js both name Firebase project `the-1p-leadership`,
+ * the same project this site runs in.
  *
- * So accounts are created through a named secondary Admin app built
- * from PORTAL_SERVICE_ACCOUNT. If that secret is not set we fall back
- * to the default app, which is the correct behaviour if the portal
- * turns out to be a second hosting site inside this same project.
+ * One project means one Auth user pool, so an account created here IS
+ * the portal login. No extra credentials are needed.
  *
- * Because a wrong guess here is silent, every signup records the
- * project id the account was actually created in, and the admin
- * console shows it. A misconfiguration is then visible on the first
- * test signup instead of months later.
+ * PORTAL_SERVICE_ACCOUNT exists only for the other case, a portal in a
+ * genuinely separate Firebase project with its own user list. Leave it
+ * unset. Every signup still records the project id its account landed
+ * in, and the admin console shows it, so if the two are ever split
+ * apart the mismatch shows up on the next signup.
+ *
+ * THE PROFILE SHAPE IS NOT A GUESS
+ * The document written below mirrors ensureUserDoc() in the portal's
+ * public/js/auth.js, which is what the portal itself writes when
+ * somebody signs up there. Matching it is what makes an account
+ * created here work on first login instead of dropping the person
+ * into a half-built profile.
  */
 
 const PORTAL_APP_NAME = 'portal';
@@ -39,13 +44,13 @@ export function portalApp() {
 
   const raw = PORTAL_SERVICE_ACCOUNT.value();
   if (!raw) {
-    // No portal credentials configured. Use the default app, and say
-    // so loudly enough to find in the logs.
-    logger.warn(
-      'PORTAL_SERVICE_ACCOUNT is not set. Portal accounts will be created in this project. ' +
-      'If the portal is a separate Firebase project, those accounts will not work.'
-    );
-    resolved = { app: getApp(), projectId: process.env.GCLOUD_PROJECT || 'default', dedicated: false };
+    // Expected path. The portal shares this project, so the default
+    // app is the right one and its user pool is the portal's.
+    resolved = {
+      app: getApp(),
+      projectId: process.env.GCLOUD_PROJECT || 'the-1p-leadership',
+      dedicated: false
+    };
     return resolved;
   }
 
@@ -77,6 +82,11 @@ export function toE164(raw) {
   if (bare.length === 11 && bare.startsWith('1')) return `+${bare}`;
   return null;
 }
+
+// The portal bootstraps this address to the owner role in
+// ensureUserDoc(). Mirrored here so signing up through a class form
+// with it cannot overwrite the owner role with a plain one.
+const OWNER_EMAIL = 'the1percentnation@gmail.com';
 
 const DEFAULT_PROFILE = {
   collection: 'users',
@@ -149,33 +159,47 @@ export async function createPortalAccount({
     }
   }
 
-  /* Profile document.
-     The portal's real schema is not visible from this repo, so the
-     collection and field names are configurable per class in
-     classes/{slug}/private/config under `portal`. If the portal
-     expects different names this is an admin console edit rather
-     than a code change. */
+  /* Profile document, matching ensureUserDoc() in the portal's
+     public/js/auth.js.
+
+     Two halves, and the split matters. `role`, `tier`, `companyId`,
+     and `createdAt` are written ONLY when the document does not exist
+     yet. Merging them into an existing profile would quietly demote a
+     member who has since been made an admin, or moved onto a company
+     tier, back to a plain individual. A class signup must never be
+     able to do that.
+
+     Everything else is additive and safe to merge on every signup. */
   const cfg = { ...DEFAULT_PROFILE, ...(profileConfig || {}) };
   const map = { ...DEFAULT_PROFILE.fields, ...(profileConfig?.fields || {}) };
+  const profileRef = db.collection(cfg.collection).doc(user.uid);
+  const existingProfile = await profileRef.get();
 
   const profile = {
+    [map.email]: email,
+    [map.displayName]: displayName || null,
+    // Not part of the portal's own schema, but Anthony asked for them
+    // and extra fields do not disturb how the portal reads the doc.
     [map.firstName]: firstName || '',
     [map.lastName]: lastName || '',
-    [map.email]: email,
     [map.phone]: phone || '',
-    [map.displayName]: displayName,
-    source: 'class-signup',
-    updatedAt: FieldValue.serverTimestamp()
+    lastActiveAt: FieldValue.serverTimestamp()
   };
-  if (created) profile.createdAt = FieldValue.serverTimestamp();
 
-  // Track every class this person has joined without overwriting the
-  // ones already there.
+  if (!existingProfile.exists) {
+    profile.role = email.toLowerCase() === OWNER_EMAIL ? 'owner' : 'user';
+    profile.companyId = null;
+    profile.tier = 'individual';
+    profile.createdAt = FieldValue.serverTimestamp();
+    profile.source = 'class-signup';
+  }
+
+  // Every class this person has joined, without disturbing earlier ones.
   if (classSlug) {
     profile.classes = FieldValue.arrayUnion({ slug: classSlug, name: className || classSlug });
   }
 
-  await db.collection(cfg.collection).doc(user.uid).set(profile, { merge: true });
+  await profileRef.set(profile, { merge: true });
 
   /* Set-password link. Only for accounts we just created; someone who
      already had a portal login does not need one and should not be

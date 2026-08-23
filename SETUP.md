@@ -85,10 +85,14 @@ covers the Firestore rules failure specifically, in place of Firebase Admin.
 Hosting needs none of this and already deploys. The workflow runs each target as
 its own step, so missing roles here cannot stop the site itself from shipping.
 
-### 2. Fill in the web config
-Firebase console → Project settings → General → Your apps → Web app → Config.
-Copy the values into `assets/firebase-init.js`. These are public identifiers,
-not credentials, and are safe to commit.
+### 2. Web config
+Already done. `assets/firebase-init.js` carries the same values the member portal
+uses, read from its `public/js/firebase.js`. Both run on Firebase project
+`the-1p-leadership`.
+
+If they ever go stale, deleting them is safe: Firebase Hosting serves the live
+config at `/__/firebase/init.json` on every domain it hosts, and the code falls
+back to that automatically.
 
 ### 3. Set the secrets
 ```bash
@@ -106,36 +110,41 @@ Non-secret values (site URL, from address, mailing address) live in
 `functions/.env`. **Set `MAILING_ADDRESS` to a real postal address before the
 first send.** CAN-SPAM requires it in every commercial email.
 
-### 3b. Member portal service account
-Signing up for a class now creates a member portal login in the background and
-emails the person a link to set their password.
+### 3b. Member portal accounts
+Signing up for a class creates a member portal login in the background and emails
+the person a link to set their password.
 
-**This site is Firebase project `the-1p-leadership`. The portal is at
-`the1p-leadership.web.app`, with no hyphen after "the".** Different names means
-almost certainly different projects, each with its own separate user list, so an
-account created here would not work there.
+**Nothing to configure.** The portal is a separate repo
+(`the1percentnation-collab/the-1p-leadership`, served from
+`the1p-leadership.web.app`), but its `.firebaserc` and its
+`public/js/firebase.js` both name project `the-1p-leadership`, the same project
+this site runs in. One project means one Auth user pool, so the account a class
+signup creates *is* the portal login.
 
-In the **portal's** Firebase project: Project settings, Service accounts,
-Generate new private key. Then paste the whole JSON file into:
+`PORTAL_SERVICE_ACCOUNT` exists only for the other case, a portal in a genuinely
+separate Firebase project. Leave it unset.
 
-```bash
-firebase functions:secrets:set PORTAL_SERVICE_ACCOUNT
-```
+**The profile shape is matched, not guessed.** The user document written at
+`users/{uid}` mirrors `ensureUserDoc()` in the portal's `public/js/auth.js`:
+`email`, `displayName`, `role`, `companyId`, `tier`, `createdAt`, `lastActiveAt`,
+plus `firstName`, `lastName`, `phone`, and `classes` which the portal ignores but
+you wanted captured.
 
-If the portal turns out to be a second hosting site inside this same project,
-skip this: leaving the secret unset creates accounts here, which is then correct.
+`role`, `tier`, `companyId`, and `createdAt` are written **only when the profile
+does not already exist**. Merging them every time would demote a member who has
+since been made an admin or moved to a company tier back to a plain individual.
+The owner bootstrap for `the1percentnation@gmail.com` is mirrored too, so signing
+yourself up cannot overwrite your own owner role.
 
-**How to tell whether you got it right.** Sign yourself up on `/matrix`, then open
-`/admin` and look at the Portal and Portal Project columns on the signup sheet.
-Portal should read `created`, and Portal Project should be the project your portal
-actually lives in. If it shows this site's project id and your portal is separate,
-the accounts are landing in the wrong place. Set the secret and use
-**Send, Portal Accounts, Create Missing Accounts** to fix everyone at once.
+**How to confirm it worked.** Sign yourself up on `/matrix`, then open `/admin`.
+The signup sheet has Portal and Portal Project columns: Portal should read
+`created`, Portal Project should read `the-1p-leadership`. Then open the
+set-password link from your welcome email and log into
+`the1p-leadership.web.app` with it.
 
-Also check that the portal profile matches what your portal expects. It is written
-to `users/{uid}` with `firstName`, `lastName`, `email`, `phone`, and `displayName`
-by default. If your portal uses different names, change them in `/admin` under the
-class's private config rather than in code.
+If any signup ever shows `failed` or `none`, use
+**Send, Portal Accounts, Create Missing Accounts**. Safe to run repeatedly, and
+it never touches an existing account.
 
 ### 4. SendGrid
 Create the API key, then **authenticate your sending domain**. Domain
@@ -189,6 +198,13 @@ the form questions, set the price and cap. It is live at
 `matrix.html` is the hand-designed page for the flagship. `class.html` renders
 everything else from its Firestore record.
 
+## Before you promote the link
+
+- [ ] Load `/matrix` and confirm the form renders instead of the
+      "signups are briefly unavailable" fallback
+- [ ] Sign yourself up, then check Portal and Portal Project in `/admin`
+- [ ] Open the set-password link from your welcome email and log into the portal
+
 ## Before you take the first payment
 
 - [ ] Fill in every bracketed value in `privacy.html` and `terms.html`, and have
@@ -208,7 +224,7 @@ enrolled.html            Stripe success page
 unsubscribe.html         one-click unsubscribe
 assets/1p.css            shared design system
 assets/class-form.js     renders a form schema, handles submit and enrollment
-assets/firebase-init.js  web config and lazy SDK loading
+assets/firebase-init.js  resolves project config, lazy SDK loading
 functions/               Cloud Functions, email templates, seed scripts
 firestore.rules          signups are sealed from all client access
 ```
