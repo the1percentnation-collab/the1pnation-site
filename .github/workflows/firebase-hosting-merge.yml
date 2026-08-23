@@ -73,6 +73,21 @@ jobs:
         if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
         run: npx --yes firebase-tools@13 deploy --only functions:classes --project the-1p-leadership --non-interactive
 
+      # The class page reads its copy, price, and capacity from a
+      # Firestore document, and getClassState returns not-found until
+      # that document exists. Deploying working functions with no class
+      # record produced a page that looked broken, so creating it is
+      # part of deploying rather than a step someone has to remember.
+      #
+      # Safe on every run: the seed leaves an existing class untouched
+      # unless FORCE=1, so it cannot overwrite copy edited in /admin.
+      - name: Seed the class if it does not exist
+        if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
+        working-directory: functions
+        run: node scripts/seed-matrix.js
+        env:
+          GCLOUD_PROJECT: the-1p-leadership
+
       - name: Remove credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/sa.json"

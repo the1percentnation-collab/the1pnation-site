@@ -204,25 +204,20 @@ Subscribe it to `checkout.session.completed` and put its signing secret into
 `STRIPE_WEBHOOK_SECRET`.
 
 ### 6. Deploy and seed
-Deploying is automatic: merging to `main` runs the workflow.
+Both are automatic. Merging to `main` deploys hosting and functions, then creates
+the class record if it is missing.
 
-**Seeding is not, and the page does not work without it.** The class page reads
-its copy, price, and capacity from a Firestore document, and `getClassState`
-returns not-found until that document exists. The page shows that as a message
-telling visitors registration is not open yet.
+That last part matters: the class page reads its copy, price, and capacity from a
+Firestore document, and `getClassState` returns not-found until it exists. A
+deploy with working functions and no class record produces a page that looks
+broken, so seeding is part of deploying rather than something to remember.
 
-Run the **Seed a class record** workflow once from
-<https://github.com/the1percentnation-collab/the1pnation-site/actions>: pick it in
-the left sidebar, click **Run workflow**, leave `force` unchecked, and run it.
+Re-running is safe. An existing class is left untouched, so a deploy never
+overwrites copy you have edited in `/admin`.
 
-Safe to run again. An existing class is left untouched unless you tick `force`,
-so it cannot quietly overwrite copy you have edited in `/admin`.
-
-If you prefer the CLI:
-
-```bash
-cd functions && npm run seed
-```
+To deliberately reset a class back to the values in
+`functions/scripts/seed-matrix.js`, run the **Seed a class record** workflow from
+the Actions tab with `force` ticked. That does overwrite.
 
 ### 7. Give yourself admin access
 Create your account at `/admin`, then:
