@@ -53,25 +53,37 @@ that page onto this pipeline when you want a real number there.
 Cloud Functions require the pay-as-you-go plan. At this volume it costs a few
 cents to a couple of dollars a month, and the free tier still applies.
 
-### 1b. Grant the deploy service account permission to deploy functions
-The GitHub Actions deploy failed on its first run with:
+### 1b. Give the deploy service account the roles it needs
+Two deploys to `main` have now failed on permissions, each with a different one.
+Hosting deploys fine; the rest does not yet.
 
 ```
+# functions
 Missing permissions required for functions deploy. You must have permission
 iam.serviceAccounts.ActAs on service account
 the-1p-leadership@appspot.gserviceaccount.com
+
+# firestore rules
+Request to https://firebaserules.googleapis.com/v1/projects/the-1p-leadership:test
+had HTTP Error: 403, The caller does not have permission
 ```
 
-The service account behind `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` can
-deploy hosting but cannot yet act as the functions runtime service account.
-Fix it at
-<https://console.cloud.google.com/iam-admin/iam?project=the-1p-leadership>:
-find that service account and add the **Service Account User**
-(`roles/iam.serviceAccountUser`) role.
+The service account behind `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` holds
+enough to publish hosting and nothing more. Open
+<https://console.cloud.google.com/iam-admin/iam?project=the-1p-leadership>, find
+that service account, and grant it:
 
-Hosting and Firestore rules deploy without this. Only functions need it, and
-the deploy workflow runs them as separate steps so a missing role here cannot
-stop the site itself from shipping.
+| Role | Needed for |
+| --- | --- |
+| **Firebase Admin** (`roles/firebase.admin`) | Firestore rules and indexes, and general deploys |
+| **Service Account User** (`roles/iam.serviceAccountUser`) | Acting as the functions runtime service account |
+| **Cloud Functions Admin** (`roles/cloudfunctions.admin`) | Creating and updating the functions themselves |
+
+If you would rather keep it tight than convenient, `roles/firebaserules.admin`
+covers the Firestore rules failure specifically, in place of Firebase Admin.
+
+Hosting needs none of this and already deploys. The workflow runs each target as
+its own step, so missing roles here cannot stop the site itself from shipping.
 
 ### 2. Fill in the web config
 Firebase console → Project settings → General → Your apps → Web app → Config.

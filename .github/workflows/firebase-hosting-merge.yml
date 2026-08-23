@@ -26,6 +26,7 @@ jobs:
         run: npm install
 
       - name: Authenticate to Firebase
+        id: auth
         run: |
           echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
@@ -42,10 +43,16 @@ jobs:
       #
       # Hosting is static and deploys on the Spark plan with no extra
       # roles, so it goes first and lands regardless of the rest.
+      #
+      # Each step carries its own condition so that a failure in one
+      # target does not skip the others. They deploy independent
+      # things and have no reason to cascade.
       - name: Deploy hosting
+        if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
         run: npx --yes firebase-tools@13 deploy --only hosting --project the-1p-leadership --non-interactive
 
       - name: Deploy Firestore rules and indexes
+        if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
         run: npx --yes firebase-tools@13 deploy --only firestore --project the-1p-leadership --non-interactive
 
       # Requires the Blaze plan, and requires the deploying service
@@ -54,6 +61,7 @@ jobs:
       # fails and the run shows red, which is the honest signal: the
       # site is live but the signup backend is not.
       - name: Deploy Cloud Functions
+        if: ${{ !cancelled() && steps.auth.outcome == 'success' }}
         run: npx --yes firebase-tools@13 deploy --only functions --project the-1p-leadership --non-interactive
 
       - name: Remove credentials
