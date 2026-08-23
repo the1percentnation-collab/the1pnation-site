@@ -58,14 +58,9 @@ Two deploys to `main` have now failed on permissions, each with a different one.
 Hosting deploys fine; the rest does not yet.
 
 ```
-# functions
 Missing permissions required for functions deploy. You must have permission
 iam.serviceAccounts.ActAs on service account
 the-1p-leadership@appspot.gserviceaccount.com
-
-# firestore rules
-Request to https://firebaserules.googleapis.com/v1/projects/the-1p-leadership:test
-had HTTP Error: 403, The caller does not have permission
 ```
 
 The service account behind `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` holds
@@ -157,6 +152,30 @@ If any signup ever shows `failed` or `none`, use
 **Send, Portal Accounts, Create Missing Accounts**. Safe to run repeatedly, and
 it never touches an existing account.
 
+### 3c. One project, two repos: what this repo must never deploy
+The member portal repo (`the1percentnation-collab/the-1p-leadership`) shares this
+Firebase project. Two things in a Firebase project are single-source and
+project-wide, and the portal owns both.
+
+**Firestore rules and indexes.** One ruleset per project. The portal's is 859
+lines covering users, companies, posts, channels, contacts and campaigns.
+Deploying this repo's 60-line file would replace all of it, and its closing
+`allow read, write: if false` would lock every member out of their own data.
+`firebase.json` here no longer declares a `firestore` config and the deploy step
+is gone. The rules this site needs live in `firestore.rules.snippet` and have to
+be merged into the portal repo instead.
+
+**Cloud Functions names.** Functions are grouped by *codebase*. Both repos
+originally used `default`, so a deploy from here compared the portal's 53
+functions against this source, decided they were stale, and tried to delete all
+of them. It failed only because the run is non-interactive.
+
+This repo now deploys `--only functions:classes` against codebase `classes`,
+declared in `firebase.json`. **Never widen that back to `--only functions`, and
+never add `--force`.** If you ever see a deploy listing portal function names
+under "found in your project but do not exist in your local source code", stop
+and check the codebase setting rather than accepting the deletion.
+
 ### 4. SendGrid
 Create the API key, then **authenticate your sending domain**. Domain
 authentication matters more than the key itself; unauthenticated mail lands in
@@ -172,7 +191,7 @@ Subscribe it to `checkout.session.completed` and put its signing secret into
 
 ### 6. Deploy and seed
 ```bash
-firebase deploy --only hosting,functions,firestore
+firebase deploy --only hosting,functions:classes
 cd functions && npm run seed
 ```
 
@@ -237,5 +256,5 @@ assets/1p.css            shared design system
 assets/class-form.js     renders a form schema, handles submit and enrollment
 assets/firebase-init.js  resolves project config, lazy SDK loading
 functions/               Cloud Functions, email templates, seed scripts
-firestore.rules          signups are sealed from all client access
+firestore.rules.snippet  rules to MERGE into the portal repo, never deployed from here
 ```
