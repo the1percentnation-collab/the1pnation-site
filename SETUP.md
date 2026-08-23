@@ -53,6 +53,26 @@ that page onto this pipeline when you want a real number there.
 Cloud Functions require the pay-as-you-go plan. At this volume it costs a few
 cents to a couple of dollars a month, and the free tier still applies.
 
+### 1b. Grant the deploy service account permission to deploy functions
+The GitHub Actions deploy failed on its first run with:
+
+```
+Missing permissions required for functions deploy. You must have permission
+iam.serviceAccounts.ActAs on service account
+the-1p-leadership@appspot.gserviceaccount.com
+```
+
+The service account behind `FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP` can
+deploy hosting but cannot yet act as the functions runtime service account.
+Fix it at
+<https://console.cloud.google.com/iam-admin/iam?project=the-1p-leadership>:
+find that service account and add the **Service Account User**
+(`roles/iam.serviceAccountUser`) role.
+
+Hosting and Firestore rules deploy without this. Only functions need it, and
+the deploy workflow runs them as separate steps so a missing role here cannot
+stop the site itself from shipping.
+
 ### 2. Fill in the web config
 Firebase console → Project settings → General → Your apps → Web app → Config.
 Copy the values into `assets/firebase-init.js`. These are public identifiers,

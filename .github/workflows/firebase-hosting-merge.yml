@@ -19,9 +19,8 @@ jobs:
         with:
           node-version: '20'
 
-      # Functions carry the Stripe, SendGrid, and CRM logic, so a
-      # deploy that shipped only hosting would leave the pages
-      # calling endpoints that no longer match them.
+      # firebase-tools needs the function dependencies present locally
+      # to analyse and package the functions before uploading them.
       - name: Install function dependencies
         working-directory: functions
         run: npm install
@@ -33,8 +32,29 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THE_1P_LEADERSHIP }}
 
-      - name: Deploy hosting, functions, and Firestore rules
-        run: npx --yes firebase-tools@13 deploy --only hosting,functions,firestore --project the-1p-leadership --non-interactive
+      # Deployed as separate steps on purpose. firebase-tools runs
+      # preflight checks across every target before releasing any of
+      # them, so one combined command aborts the whole deploy if a
+      # single target is not permitted. That is what happened on the
+      # first run: a missing IAM role on functions stopped the static
+      # hosting deploy from shipping at all, even though hosting has
+      # no dependency on it.
+      #
+      # Hosting is static and deploys on the Spark plan with no extra
+      # roles, so it goes first and lands regardless of the rest.
+      - name: Deploy hosting
+        run: npx --yes firebase-tools@13 deploy --only hosting --project the-1p-leadership --non-interactive
+
+      - name: Deploy Firestore rules and indexes
+        run: npx --yes firebase-tools@13 deploy --only firestore --project the-1p-leadership --non-interactive
+
+      # Requires the Blaze plan, and requires the deploying service
+      # account to hold the Service Account User role so it can act as
+      # the runtime service account. Until both are in place this step
+      # fails and the run shows red, which is the honest signal: the
+      # site is live but the signup backend is not.
+      - name: Deploy Cloud Functions
+        run: npx --yes firebase-tools@13 deploy --only functions --project the-1p-leadership --non-interactive
 
       - name: Remove credentials
         if: always()
