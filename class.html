@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class | The One Percent Nation</title>
+  <meta name="description" content="Join the interest list for an upcoming class from The One Percent Nation.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/1p.css">
+  <style>
+    /* Generic class page. Every word on it comes from the class
+       document in Firestore, so Anthony can publish a new class
+       from the admin console without a deploy. matrix.html is the
+       hand-designed version of this same data for the flagship. */
+    .hero-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 60% 60% at 20% 30%, black 10%, transparent 70%);
+      opacity: 0.5;
+    }
+    .hero-strip { padding: 140px 32px 56px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero-title {
+      font-family: var(--font-display); font-size: clamp(48px, 7vw, 104px);
+      letter-spacing: 0.02em; line-height: 0.92; margin: 20px 0;
+    }
+    .hero-sub { font-size: 18px; font-weight: 300; color: var(--gray-400); line-height: 1.7; max-width: 620px; }
+    .painpoint { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--black-2); position: relative; z-index: 1; }
+    .painpoint-inner { max-width: 780px; margin: 0 auto; padding: 64px 32px; }
+    .pp-lead { font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px); line-height: 1.15; letter-spacing: 0.02em; }
+    .main-wrap {
+      max-width: 1200px; margin: 0 auto; padding: 72px 32px 72px;
+      display: grid; grid-template-columns: 1fr 480px; gap: 72px; align-items: start;
+      position: relative; z-index: 1;
+    }
+    .block { margin-bottom: 56px; }
+    .block-title { font-family: var(--font-display); font-size: clamp(30px, 4vw, 42px); letter-spacing: 0.02em; margin-bottom: 20px; }
+    .block-title .red { color: var(--red); }
+    .outcomes { display: grid; gap: 2px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .outcome { display: flex; gap: 16px; padding: 18px 20px; background: var(--charcoal); }
+    .outcome-num { font-family: var(--font-mono); font-size: 11px; color: var(--red); flex-shrink: 0; padding-top: 3px; min-width: 22px; }
+    .outcome-text { font-size: 15px; line-height: 1.6; font-weight: 300; }
+    .session { display: grid; grid-template-columns: 70px 1fr; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .session:last-child { border-bottom: none; }
+    .session-num { font-family: var(--font-display); font-size: 48px; line-height: 0.85; color: transparent; -webkit-text-stroke: 1px var(--border-red); }
+    .session-title { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .session-desc { font-size: 15px; font-weight: 300; line-height: 1.7; color: var(--gray-400); }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q { width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 20px 32px 20px 0; font-family: var(--font-body); font-size: 16px; font-weight: 500; color: var(--white); position: relative; }
+    .faq-q::after { content: '+'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--red); font-size: 20px; }
+    .faq-item.open .faq-q::after { content: '−'; }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s var(--ease-out); }
+    .faq-item.open .faq-a { max-height: 400px; }
+    .faq-a-inner { padding: 0 32px 22px 0; font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--gray-400); }
+    .panel-col { position: sticky; top: 88px; }
+    .state-note { padding: 14px 20px; font-size: 13px; line-height: 1.6; color: var(--gray-400); background: var(--surface); border-bottom: 1px solid var(--border); }
+    .state-note strong { color: var(--white); }
+    .enroll-box { display: none; padding: 28px 32px 32px; flex-direction: column; gap: 16px; }
+    .enroll-box.show { display: flex; }
+    .enroll-divider { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray-600); }
+    .enroll-divider::before, .enroll-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .code-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+    .loading { max-width: 1200px; margin: 0 auto; padding: 180px 32px; text-align: center; color: var(--gray-600); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+    @media (max-width: 1024px) { .main-wrap { grid-template-columns: 1fr; gap: 48px; } .panel-col { position: static; } }
+    @media (max-width: 700px) {
+      .hero-strip { padding: 120px 20px 40px; } .painpoint-inner { padding: 48px 20px; }
+      .main-wrap { padding: 48px 20px; } .session { grid-template-columns: 44px 1fr; } .session-num { font-size: 34px; }
+    }
+  </style>
+</head>
+<body class="noise">
+
+<div class="hero-grid"></div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-text"><span class="l1">The One Percent</span><span class="l2">NATION</span></div>
+    </a>
+    <a href="/" class="nav-back">← Back to Main Site</a>
+  </div>
+</nav>
+
+<div id="loading" class="loading">Loading class...</div>
+<div id="page" hidden></div>
+
+<footer>
+  <div class="footer-copy">© 2026 The One Percent Nation. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/">Back to Site</a>
+  </div>
+</footer>
+
+<script type="module">
+  import { firebase, callFn, readableError } from '/assets/firebase-init.js';
+  import { mountClassForm, mountEnrollment, initConsentToggles, initScrollReveal, esc } from '/assets/class-form.js';
+
+  const slug = new URLSearchParams(location.search).get('c');
+  const loading = document.getElementById('loading');
+  const page = document.getElementById('page');
+
+  if (!slug) {
+    loading.textContent = 'No class specified.';
+  } else {
+    try {
+      // Marketing copy comes straight from the public class doc;
+      // price and availability come from the callable, because
+      // those two have to match what the server will honour.
+      // Both of these reach the network. A failure here lands in
+      // the catch below and renders a readable message instead of
+      // leaving the page stuck on "Loading class...".
+      const { app } = await firebase();
+      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js');
+      const snap = await getDoc(doc(getFirestore(app), 'classes', slug));
+      if (!snap.exists()) throw new Error('That class does not exist.');
+
+      const cls = snap.data();
+      const state = await callFn('getClassState', { slug });
+      render(cls, state);
+    } catch (err) {
+      loading.innerHTML = esc(readableError(err));
+    }
+  }
+
+  function render(cls, state) {
+    document.title = `${cls.name} | The One Percent Nation`;
+    const isFull = state.availability.soldOut || state.status === 'waitlist';
+    const scheduled = state.status === 'scheduled' && !isFull;
+
+    const price = state.pricing.foundingActive
+      ? `<strong>${esc(state.pricing.display)}</strong> at the founding rate, normally ${esc(state.pricing.fullDisplay)}.`
+      : `<strong>${esc(state.pricing.display)}</strong>.`;
+
+    page.innerHTML = `
+<header class="hero-strip">
+  <span class="tag">${esc(cls.kicker || 'New Class')}</span>
+  <h1 class="hero-title">${esc(cls.name || '')}</h1>
+  <p class="hero-sub">${esc(cls.tagline || '')}</p>
+</header>
+
+${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
+  <div class="pp-lead fade-up">${esc(cls.painPoint)}</div>
+</div></section>` : ''}
+
+<div class="main-wrap">
+  <main>
+    ${cls.outcomes?.length ? `<section class="block">
+      <h2 class="block-title fade-up">WHAT YOU <span class="red">WALK OUT</span> WITH</h2>
+      <div class="outcomes stagger-list">${cls.outcomes.map((o, i) =>
+        `<div class="outcome"><div class="outcome-num">${String(i + 1).padStart(2, '0')}</div><div class="outcome-text">${esc(o)}</div></div>`
+      ).join('')}</div>
+    </section>` : ''}
+
+    ${cls.sessions?.length ? `<section class="block">
+      <h2 class="block-title fade-up">HOW THE <span class="red">ROOM</span> RUNS</h2>
+      ${cls.sessions.map((s, i) => `<div class="session fade-up">
+        <div class="session-num">${String(s.number || i + 1).padStart(2, '0')}</div>
+        <div>
+          <h3 class="session-title">${esc(s.title || `Session ${i + 1}`)}</h3>
+          <p class="session-desc">${esc(s.description || '')}</p>
+        </div>
+      </div>`).join('')}
+    </section>` : ''}
+
+    ${cls.faq?.length ? `<section class="block">
+      <h2 class="block-title fade-up">BEFORE YOU <span class="red">DECIDE</span></h2>
+      <div class="fade-up">${cls.faq.map((f) => `<div class="faq-item">
+        <button class="faq-q" type="button">${esc(f.q)}</button>
+        <div class="faq-a"><div class="faq-a-inner">${esc(f.a)}</div></div>
+      </div>`).join('')}</div>
+    </section>` : ''}
+  </main>
+
+  <aside class="panel-col">
+    <div class="form-panel" id="enroll">
+      <div class="form-panel-header">
+        <div class="form-panel-title">${isFull ? 'JOIN THE WAITLIST' : scheduled ? 'CLAIM YOUR SEAT' : 'JOIN THE LIST'}</div>
+        <div class="form-panel-sub">${isFull
+          ? 'This cohort is full. You will be first in line for the next one.'
+          : scheduled ? 'The dates are set. Seats are held in the order they are claimed.'
+          : 'Be first to get the dates, and first to claim a seat.'}</div>
+        ${state.availability.capacity && scheduled ? `<div class="spots-row">
+          <div class="spots-label">Seats Left</div>
+          <div class="spots-bar-wrap"><div class="spots-bar" style="width:${
+            Math.min(100, ((state.availability.capacity - (state.availability.seatsLeft ?? 0)) / state.availability.capacity) * 100)
+          }%"></div></div>
+          <div class="spots-count">${state.availability.seatsLeft ?? 0}</div>
+        </div>` : state.interestCount ? `<div class="spots-row">
+          <div class="spots-label">On The List</div>
+          <div class="spots-bar-wrap"><div class="spots-bar" style="width:100%"></div></div>
+          <div class="spots-count">${state.interestCount}</div>
+        </div>` : ''}
+      </div>
+
+      <div class="state-note">${price}${scheduled ? '' : ' No payment today. You are only telling me you want in.'}</div>
+
+      <form class="custom-form" id="class-form" novalidate ${scheduled ? 'style="display:none"' : ''}>
+        <div class="form-alert" data-form-alert role="alert"></div>
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label" for="firstName">First Name <span class="field-required">*</span></label>
+            <input class="field-input" type="text" id="firstName" name="firstName" autocomplete="given-name" placeholder="Your first name">
+            <div class="field-error">Please enter your first name.</div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="email">Email <span class="field-required">*</span></label>
+            <input class="field-input" type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
+            <div class="field-error">Please enter a valid email address.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="phone">Phone <span class="field-optional">optional</span></label>
+          <input class="field-input" type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+1 (555) 000-0000">
+        </div>
+        <div id="dynamic-fields"></div>
+        <div class="consent-block">
+          <div class="consent-item">
+            <div class="consent-box" data-consent="sms"></div>
+            <p class="consent-text">By checking this box, you agree to receive text messages from <strong>The One Percent</strong> related to your inquiry, bookings, or program updates. Message frequency may vary. Message and data rates may apply. Reply <strong>HELP</strong> for assistance or <strong>STOP</strong> to opt out.</p>
+          </div>
+          <div class="consent-item">
+            <div class="consent-box" data-consent="marketing"></div>
+            <p class="consent-text">By checking this box, you agree to receive marketing and promotional messages from <strong>The One Percent</strong>, including special offers, discounts, and new program updates. Reply <strong>STOP</strong> to opt out at any time.</p>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" data-submit>
+          <span data-submit-label>${isFull ? 'Add Me To The Waitlist' : 'Put Me On The List'}</span><span>→</span>
+        </button>
+        <p class="form-legal">Your information is protected and never sold. By joining you agree to our
+          <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Service</a>.</p>
+      </form>
+
+      <div class="enroll-box ${scheduled ? 'show' : ''}" data-enroll>
+        <div class="form-alert" data-form-alert role="alert"></div>
+        <div class="field">
+          <label class="field-label" for="enroll-email">Your Email</label>
+          <input class="field-input" type="email" id="enroll-email" data-enroll-email autocomplete="email" placeholder="The email you signed up with">
+        </div>
+        <button type="button" class="btn-submit" data-enroll-pay>Claim My Seat</button>
+        <div class="enroll-divider">or</div>
+        <div class="field">
+          <label class="field-label" for="enroll-code">Have an access code?</label>
+          <div class="code-row">
+            <input class="field-input" type="text" id="enroll-code" data-enroll-code placeholder="Enter your code" spellcheck="false" autocomplete="off">
+            <button type="button" class="btn-ghost" data-enroll-redeem>Apply</button>
+          </div>
+        </div>
+        <p class="form-legal">Secure checkout by Stripe. Your card details never touch this site.</p>
+      </div>
+
+      <div class="form-success" data-success>
+        <div class="success-icon">✓</div>
+        <div class="success-title">You're <span class="red">on the list</span></div>
+        <div class="success-desc">Check your email for confirmation. When the dates are set you will hear from me before anyone else.</div>
+      </div>
+    </div>
+  </aside>
+</div>`;
+
+    loading.hidden = true;
+    page.hidden = false;
+
+    initConsentToggles(page);
+    initScrollReveal(page);
+
+    page.querySelectorAll('.faq-q').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const open = item.classList.contains('open');
+        page.querySelectorAll('.faq-item.open').forEach((i) => i.classList.remove('open'));
+        if (!open) item.classList.add('open');
+      });
+    });
+
+    const form = page.querySelector('#class-form');
+    const success = page.querySelector('[data-success]');
+    mountClassForm({
+      slug,
+      mount: page.querySelector('#dynamic-fields'),
+      form,
+      formFields: state.formFields,
+      onSuccess: () => {
+        form.style.display = 'none';
+        success.style.display = 'flex';
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+
+    if (scheduled) mountEnrollment({ slug, root: page.querySelector('[data-enroll]') });
+  }
+</script>
+</body>
+</html>

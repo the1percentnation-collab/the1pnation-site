@@ -1,0 +1,22 @@
+{
+  "name": "the1pnation-functions",
+  "description": "Class signup, enrollment, and email backend for The One Percent Nation",
+  "type": "module",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions,firestore,hosting",
+    "shell": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "seed": "node scripts/seed-matrix.js",
+    "grant-admin": "node scripts/grant-admin.js"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.4",
+    "firebase-admin": "^13.0.2",
+    "firebase-functions": "^6.3.0",
+    "stripe": "^17.5.0"
+  },
+  "private": true
+}

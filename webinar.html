@@ -634,7 +634,7 @@
         <span id="btn-arrow">→</span>
       </button>
       <p class="form-legal">
-        Your information is protected. By registering, you agree to our <a href="#">Privacy Policy</a> and <a href="#">Terms of Service</a>.
+        Your information is protected. By registering, you agree to our <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Service</a>.
       </p>
     </form>
   </div>
@@ -667,8 +667,8 @@
 <footer>
   <div class="footer-copy">© 2025 The One Percent Nation. All rights reserved.</div>
   <div class="footer-links">
-    <a href="#">Privacy Policy</a>
-    <a href="#">Terms of Service</a>
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Service</a>
     <a href="/">Back to Site</a>
   </div>
 </footer>
@@ -694,15 +694,20 @@
   }
   updateCd(); setInterval(updateCd, 1000);
 
-  // Spots simulation
-  let spots = 53;
-  setInterval(() => {
-    if (spots < 80 && Math.random() < 0.2) {
-      spots++;
-      document.getElementById('spots-num').textContent = spots;
-      document.getElementById('spots-bar').style.width = spots + '%';
-    }
-  }, 12000);
+  // Seat counter.
+  //
+  // This previously incremented on a random timer, which meant the
+  // number a visitor saw had no relationship to how many people had
+  // actually registered. Scarcity only works as a signal if it is
+  // true, and on a brand built around integrity a fabricated one is
+  // not worth the conversions it buys.
+  //
+  // The registration form on this page posts straight to
+  // GoHighLevel, so there is no live count available here yet. The
+  // meter is hidden until this page is moved onto the class signup
+  // pipeline used by /matrix, which tracks real registrations in
+  // Firestore. Until then it shows nothing rather than a fiction.
+  document.querySelector('.spots-row')?.remove();
 
   // Consent toggles
   function toggleConsent(id) {

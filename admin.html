@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Console | The One Percent Nation</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/1p.css">
+  <style>
+    body { padding-top: 68px; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px 80px; }
+
+    /* Gate */
+    .gate { max-width: 400px; margin: 80px auto; }
+    .gate .form-panel { padding-bottom: 8px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 28px; flex-wrap: wrap; }
+    .tab {
+      background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer;
+      padding: 12px 18px; font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray-600); transition: all 0.2s;
+    }
+    .tab:hover { color: var(--white); }
+    .tab.active { color: var(--red); border-bottom-color: var(--red); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Stat tiles */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat { background: var(--charcoal); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+    .stat-num { font-family: var(--font-display); font-size: 40px; line-height: 1; letter-spacing: 0.02em; }
+    .stat-num.red { color: var(--red); }
+    .stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray-600); margin-top: 6px; }
+
+    /* Breakdown bars */
+    .breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .breakdown { background: var(--charcoal); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .breakdown h3 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; font-weight: 400; }
+    .brow { margin-bottom: 10px; }
+    .brow-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .brow-top span:last-child { color: var(--gray-600); font-family: var(--font-mono); font-size: 11px; }
+    .brow-bar { height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; }
+    .brow-fill { height: 100%; background: var(--red); border-radius: 2px; }
+    .empty { color: var(--gray-600); font-size: 13px; font-weight: 300; }
+
+    /* Table */
+    .table-tools { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+    .table-tools .field-input, .table-tools .field-select { width: auto; min-width: 180px; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 860px; }
+    th {
+      text-align: left; padding: 12px 14px; background: var(--surface);
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--gray-600); font-weight: 400;
+      border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    th:hover { color: var(--white); }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--charcoal); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .pill {
+      display: inline-block; padding: 3px 9px; border-radius: 12px;
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1px solid var(--border); color: var(--gray-400);
+    }
+    .pill.interest { border-color: var(--border-red); color: var(--red); }
+    .pill.announced { border-color: rgba(230,166,3,0.4); color: var(--amber); }
+    .pill.paid, .pill.enrolled { border-color: rgba(29,185,84,0.4); color: var(--green); }
+    .muted { color: var(--gray-600); }
+
+    /* Builder */
+    .builder-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+    .card { background: var(--charcoal); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+    .card h3 { font-family: var(--font-display); font-size: 22px; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .card-hint { font-size: 12px; font-weight: 300; color: var(--gray-600); line-height: 1.6; margin-bottom: 18px; }
+    .card .field { margin-bottom: 14px; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    .fieldrow {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px; margin-bottom: 10px;
+    }
+    .fieldrow-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .fieldrow-title { font-size: 13px; font-weight: 600; }
+    .fieldrow-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--gray-600);
+      width: 26px; height: 26px; cursor: pointer; font-size: 12px; line-height: 1; transition: all 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--border-red); color: var(--white); }
+    .icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+    .sessions-editor .fieldrow { margin-bottom: 10px; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-danger { background: var(--red); }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 22px; font-size: 14px; z-index: 200; opacity: 0;
+      transition: transform 0.3s var(--ease-out), opacity 0.3s; max-width: 90vw;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { border-color: var(--red); }
+
+    /* Confirm dialog */
+    dialog {
+      background: var(--charcoal); border: 1px solid var(--border); border-radius: 14px;
+      color: var(--white); padding: 28px; max-width: 460px; width: calc(100vw - 40px);
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+    dialog h3 { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.04em; margin-bottom: 12px; }
+    dialog p { font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--gray-400); margin-bottom: 20px; }
+    dialog p strong { color: var(--white); font-weight: 500; }
+
+    @media (max-width: 1000px) { .builder-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .row-2, .row-3 { grid-template-columns: 1fr; } .wrap { padding: 24px 16px 60px; } }
+  </style>
+</head>
+<body class="noise">
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-text"><span class="l1">The One Percent</span><span class="l2">CLASS CONSOLE</span></div>
+    </a>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <span class="eyebrow" id="who"></span>
+      <button class="btn-ghost" id="signout" hidden>Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ AUTH GATE ══
+     A client-side gate is convenience only. The real enforcement is
+     the admin custom claim, checked inside every admin function and
+     in firestore.rules. ══ -->
+<div class="gate" id="gate">
+  <div class="form-panel">
+    <div class="form-panel-header">
+      <div class="form-panel-title">SIGN IN</div>
+      <div class="form-panel-sub">Administrator access only.</div>
+    </div>
+    <form class="custom-form" id="signin-form">
+      <div class="form-alert" data-form-alert role="alert"></div>
+      <div class="field">
+        <label class="field-label" for="gate-email">Email</label>
+        <input class="field-input" type="email" id="gate-email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="field-label" for="gate-pass">Password</label>
+        <input class="field-input" type="password" id="gate-pass" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-submit"><span>Sign In</span><span>→</span></button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ CONSOLE ══ -->
+<div class="wrap" id="console" hidden>
+
+  <div class="table-tools" style="margin-bottom:20px;">
+    <select class="field-select" id="class-picker" style="min-width:260px;"></select>
+    <button class="btn-ghost" id="reload">Refresh</button>
+    <a class="btn-ghost" id="view-page" target="_blank" rel="noopener" style="display:inline-block;">View Page ↗</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="signups">Signup Sheet</button>
+    <button class="tab" data-tab="builder">Class Builder</button>
+    <button class="tab" data-tab="send">Send</button>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <section class="panel active" data-panel="dashboard">
+    <div class="stats" id="stats"></div>
+    <div class="breakdowns" id="breakdowns"></div>
+  </section>
+
+  <!-- ── SIGNUP SHEET ── -->
+  <section class="panel" data-panel="signups">
+    <div class="table-tools">
+      <input class="field-input" id="search" type="search" placeholder="Search name or email">
+      <select class="field-select" id="stage-filter">
+        <option value="">All stages</option>
+        <option value="interest">Interest</option>
+        <option value="waitlist">Waitlist</option>
+        <option value="announced">Announced</option>
+        <option value="paid">Paid</option>
+        <option value="enrolled">Enrolled</option>
+      </select>
+      <button class="btn-ghost" id="export">Export CSV</button>
+      <span class="eyebrow" id="row-count"></span>
+    </div>
+    <div class="table-scroll"><table id="sheet"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <!-- ── CLASS BUILDER ── -->
+  <section class="panel" data-panel="builder">
+    <div class="builder-grid">
+      <div>
+        <div class="card">
+          <h3>THE OFFER</h3>
+          <p class="card-hint">This copy renders on the public class page. The flagship page at /matrix uses its own hand-written version, so edits here affect classes shown through /class.html.</p>
+          <div class="field">
+            <label class="field-label" for="b-name">Class Name</label>
+            <input class="field-input" id="b-name">
+          </div>
+          <div class="field">
+            <label class="field-label" for="b-tagline">Tagline</label>
+            <input class="field-input" id="b-tagline">
+          </div>
+          <div class="field">
+            <label class="field-label" for="b-pain">Pain Point</label>
+            <textarea class="field-textarea" id="b-pain"></textarea>
+          </div>
+          <div class="field">
+            <label class="field-label" for="b-outcomes">What They Walk Out With <span class="field-optional">one per line</span></label>
+            <textarea class="field-textarea" id="b-outcomes" style="min-height:150px;"></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>SESSIONS</h3>
+          <p class="card-hint">Session titles and descriptions, plus the dates. Dates are what the announcement email and the calendar invite are built from.</p>
+          <div class="sessions-editor" id="sessions-editor"></div>
+          <div class="btn-row"><button class="btn-ghost" id="add-session">+ Add Session</button></div>
+          <div class="row-2" style="margin-top:18px;">
+            <div class="field">
+              <label class="field-label" for="b-tz">Timezone</label>
+              <input class="field-input" id="b-tz" placeholder="America/New_York">
+            </div>
+            <div class="field">
+              <label class="field-label" for="b-join">Join URL <span class="field-optional">Zoom or similar</span></label>
+              <input class="field-input" id="b-join" placeholder="https://">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>SIGNUP FORM</h3>
+          <p class="card-hint">These are the questions on the interest form. Keep the required ones to a minimum. Anything you mark required is friction, and friction at this stage is what costs you signups.</p>
+          <div id="fields-editor"></div>
+          <div class="btn-row">
+            <button class="btn-ghost" data-add-field="radio">+ Choice</button>
+            <button class="btn-ghost" data-add-field="checkbox">+ Multi Select</button>
+            <button class="btn-ghost" data-add-field="text">+ Short Text</button>
+            <button class="btn-ghost" data-add-field="textarea">+ Long Text</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>PRICE &amp; SCARCITY</h3>
+          <p class="card-hint">Every number here is enforced on the server. The page cannot promise a rate or a seat the checkout will not honour.</p>
+          <div class="row-2">
+            <div class="field">
+              <label class="field-label" for="b-price">Full Price <span class="field-optional">dollars</span></label>
+              <input class="field-input" id="b-price" type="number" min="0" step="1">
+            </div>
+            <div class="field">
+              <label class="field-label" for="b-founding">Founding Rate</label>
+              <input class="field-input" id="b-founding" type="number" min="0" step="1">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="b-founding-until">Founding Rate Ends</label>
+            <input class="field-input" id="b-founding-until" type="datetime-local">
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label class="field-label" for="b-capacity">Seat Cap</label>
+              <input class="field-input" id="b-capacity" type="number" min="0" step="1">
+            </div>
+            <div class="field">
+              <label class="field-label" for="b-close">Enrollment Closes</label>
+              <input class="field-input" id="b-close" type="datetime-local">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="b-status">Status</label>
+            <select class="field-select" id="b-status">
+              <option value="interest">Interest, collecting names</option>
+              <option value="scheduled">Scheduled, taking payment</option>
+              <option value="waitlist">Waitlist only</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>NEW CLASS</h3>
+          <p class="card-hint">Creates a fresh class with the current form fields as a starting point. It goes live at /class.html?c=slug the moment you save.</p>
+          <div class="field">
+            <label class="field-label" for="new-slug">URL Slug</label>
+            <input class="field-input" id="new-slug" placeholder="content-batching-lab">
+          </div>
+          <div class="btn-row"><button class="btn-ghost" id="create-class">Create Class</button></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-submit" id="save-class"><span>Save Changes</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SEND ── -->
+  <section class="panel" data-panel="send">
+    <div class="card">
+      <h3>ANNOUNCE THIS CLASS</h3>
+      <p class="card-hint">
+        This is the second message. It goes to everyone on the interest list and the waitlist with the
+        session dates, the price, a checkout link, an access code field, and a calendar invite. It also
+        flips the class to Scheduled so the public page starts taking payment.
+        Add the session dates first, or this will refuse to send.
+      </p>
+      <div class="btn-row">
+        <button class="btn-ghost" id="announce-preview">Check Recipients</button>
+        <button class="btn-submit btn-danger" id="announce" style="width:auto;padding:14px 28px;"><span>Announce Class</span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>PORTAL INSTRUCTIONS</h3>
+      <p class="card-hint">
+        The third message. Goes to everyone who has paid, explaining that class delivery happens in the
+        member portal and how to set up their account. This sends automatically on payment, so use this
+        only to catch someone the automatic send missed.
+      </p>
+      <div class="btn-row">
+        <button class="btn-ghost" id="portal-preview">Check Recipients</button>
+        <button class="btn-ghost" id="portal-send">Send To Uninvited</button>
+        <button class="btn-ghost" id="portal-resend">Resend To Everyone Paid</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ACCESS CODES</h3>
+      <p class="card-hint">
+        A code at 100 percent enrols the person directly without a payment, and without the word "free"
+        appearing anywhere on the page, in the checkout, or in their confirmation. The seat keeps its
+        stated value. Codes below 100 percent go through Stripe with the discount applied.
+      </p>
+      <div id="codes-editor"></div>
+      <div class="btn-row">
+        <button class="btn-ghost" id="add-code">+ Add Code</button>
+        <button class="btn-ghost" id="save-codes">Save Codes</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<dialog id="confirm">
+  <h3 id="confirm-title">Are you sure?</h3>
+  <p id="confirm-body"></p>
+  <div class="btn-row">
+    <button class="btn-ghost" id="confirm-no">Cancel</button>
+    <button class="btn-submit" id="confirm-yes" style="width:auto;padding:12px 24px;">Confirm</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { firebase, callFn, firebaseAuth, readableError } from '/assets/firebase-init.js';
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  const $ = (sel) => document.querySelector(sel);
+  const gate = $('#gate'), console_ = $('#console');
+
+  let db, docRef, getDoc, setDoc, collection, getDocs, doc, updateDoc;
+  let current = null;      // { slug, data, privateData }
+  let signups = { rows: [], summary: {} };
+  let sortKey = 'createdAt', sortDir = -1;
+
+  /* ── Toast + confirm ─────────────────────────────────── */
+  function toast(msg, isError) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.toggle('error', !!isError);
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 4200);
+  }
+
+  function confirmDialog(title, body) {
+    return new Promise((resolve) => {
+      const dlg = $('#confirm');
+      $('#confirm-title').textContent = title;
+      $('#confirm-body').innerHTML = body;
+      const done = (v) => { dlg.close(); resolve(v); };
+      $('#confirm-yes').onclick = () => done(true);
+      $('#confirm-no').onclick = () => done(false);
+      dlg.showModal();
+    });
+  }
+
+  /* ── Auth ────────────────────────────────────────────── */
+  // The Firebase SDK is loaded from a CDN. If that fetch fails the
+  // whole module would otherwise abort at this line, leaving a
+  // sign-in form that silently does nothing when clicked.
+  let auth, signInWithEmailAndPassword, onAuthStateChanged, signOut;
+  try {
+    ({ auth, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await firebaseAuth());
+  } catch (err) {
+    const alert = $('#signin-form [data-form-alert]');
+    alert.textContent = 'Could not load the sign in library. Check your connection and reload the page.';
+    alert.classList.add('show');
+    $('#signin-form').querySelector('.btn-submit').disabled = true;
+    throw err;
+  }
+
+  $('#signin-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alert = $('#signin-form [data-form-alert]');
+    alert.classList.remove('show');
+    try {
+      await signInWithEmailAndPassword(auth, $('#gate-email').value.trim(), $('#gate-pass').value);
+    } catch (err) {
+      alert.textContent = 'That email and password did not match an account.';
+      alert.classList.add('show');
+    }
+  });
+
+  $('#signout').addEventListener('click', () => signOut(auth));
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      gate.hidden = false; console_.hidden = true;
+      $('#signout').hidden = true; $('#who').textContent = '';
+      return;
+    }
+    // The admin claim is what actually authorises anything. If it
+    // is missing, every admin function will reject regardless of
+    // what this page shows, so refuse here rather than render a
+    // console whose every button fails.
+    const token = await user.getIdTokenResult(true);
+    if (!token.claims.admin) {
+      const alert = $('#signin-form [data-form-alert]');
+      alert.textContent = 'This account does not have administrator access.';
+      alert.classList.add('show');
+      await signOut(auth);
+      return;
+    }
+    gate.hidden = true; console_.hidden = false;
+    $('#signout').hidden = false;
+    $('#who').textContent = user.email;
+    await boot();
+  });
+
+  /* ── Firestore ───────────────────────────────────────── */
+  async function boot() {
+    const { app } = await firebase();
+    const fs = await import('https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js');
+    ({ getDoc, setDoc, collection, getDocs, doc, updateDoc } = fs);
+    db = fs.getFirestore(app);
+
+    const snap = await getDocs(collection(db, 'classes'));
+    const picker = $('#class-picker');
+    picker.innerHTML = snap.docs
+      .map((d) => `<option value="${esc(d.id)}">${esc(d.data().name || d.id)}</option>`)
+      .join('') || '<option value="">No classes yet</option>';
+
+    picker.addEventListener('change', () => loadClass(picker.value));
+    if (snap.docs.length) await loadClass(picker.value);
+  }
+
+  async function loadClass(slug) {
+    if (!slug) return;
+    const [pub, priv] = await Promise.all([
+      getDoc(doc(db, 'classes', slug)),
+      getDoc(doc(db, 'classes', slug, 'private', 'config'))
+    ]);
+    current = { slug, data: pub.data() || {}, privateData: priv.exists() ? priv.data() : {} };
+    $('#view-page').href = `/class.html?c=${encodeURIComponent(slug)}`;
+
+    fillBuilder();
+    renderCodes();
+    await refreshSignups();
+  }
+
+  async function refreshSignups() {
+    if (!current) return;
+    try {
+      signups = await callFn('listSignups', { slug: current.slug });
+      renderDashboard();
+      renderSheet();
+    } catch (err) {
+      toast(readableError(err), true);
+    }
+  }
+
+  $('#reload').addEventListener('click', refreshSignups);
+
+  /* ── Tabs ────────────────────────────────────────────── */
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  /* ── Dashboard ───────────────────────────────────────── */
+  function renderDashboard() {
+    const s = signups.summary || {};
+    const byStage = s.byStage || {};
+    const capacity = Number(current.data.capacity) || 0;
+    const paid = Number(current.data.seatsPaid) || 0;
+
+    $('#stats').innerHTML = [
+      ['On The List', (byStage.interest || 0) + (byStage.announced || 0), false],
+      ['Waitlist', byStage.waitlist || 0, false],
+      ['Paid', paid, true],
+      ['Seats Left', capacity ? Math.max(0, capacity - paid) : '—', false],
+      ['Total Records', s.total || 0, false]
+    ].map(([label, num, red]) =>
+      `<div class="stat"><div class="stat-num ${red ? 'red' : ''}">${esc(num)}</div><div class="stat-label">${esc(label)}</div></div>`
+    ).join('');
+
+    // These four breakdowns are the decision aid. Anthony said he
+    // wants to choose when to push the class live rather than
+    // trigger on a seat count, so the console shows him what the
+    // room is actually made of before he decides.
+    const panels = [
+      ['Platform Confusion', s.byPlatform, 'Which platform the room finds hardest. This is what session one leads with.'],
+      ['Biggest Obstacle', s.byObstacle, 'What is actually blocking them.'],
+      ['Preferred Time', s.byTime, 'Schedule against this rather than guessing.'],
+      ['Wants Next', s.byInterest, 'What to build after this class, and who to sell it to.']
+    ];
+
+    $('#breakdowns').innerHTML = panels.map(([title, data, hint]) => {
+      const entries = Object.entries(data || {}).sort((a, b) => b[1] - a[1]);
+      const max = entries[0]?.[1] || 1;
+      return `<div class="breakdown">
+        <h3>${esc(title)}</h3>
+        ${entries.length
+          ? entries.map(([k, v]) => `<div class="brow">
+              <div class="brow-top"><span>${esc(k)}</span><span>${v}</span></div>
+              <div class="brow-bar"><div class="brow-fill" style="width:${(v / max) * 100}%"></div></div>
+            </div>`).join('')
+          : `<p class="empty">${esc(hint)}</p>`}
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Signup sheet ────────────────────────────────────── */
+  const COLUMNS = [
+    ['firstName', 'Name'], ['email', 'Email'], ['phone', 'Phone'], ['stage', 'Stage'],
+    ['platform', 'Platform'], ['timing', 'Time'], ['interests', 'Wants'],
+    ['source', 'Source'], ['createdAt', 'Signed Up']
+  ];
+
+  function renderSheet() {
+    const q = $('#search').value.trim().toLowerCase();
+    const stage = $('#stage-filter').value;
+
+    let rows = signups.rows.filter((r) => {
+      if (stage && r.stage !== stage) return false;
+      if (!q) return true;
+      return `${r.firstName} ${r.email}`.toLowerCase().includes(q);
+    });
+
+    rows.sort((a, b) => {
+      const av = cell(a, sortKey), bv = cell(b, sortKey);
+      return (av > bv ? 1 : av < bv ? -1 : 0) * sortDir;
+    });
+
+    $('#sheet thead').innerHTML = `<tr>${COLUMNS.map(([key, label]) =>
+      `<th data-sort="${key}">${esc(label)}${sortKey === key ? (sortDir > 0 ? ' ↑' : ' ↓') : ''}</th>`
+    ).join('')}</tr>`;
+
+    $('#sheet tbody').innerHTML = rows.length
+      ? rows.map((r) => `<tr>
+          <td>${esc(r.firstName) || '<span class="muted">—</span>'}</td>
+          <td>${esc(r.email)}${r.unsubscribed ? ' <span class="pill">unsub</span>' : ''}</td>
+          <td>${esc(r.phone) || '<span class="muted">—</span>'}</td>
+          <td><span class="pill ${esc(r.stage)}">${esc(r.stage)}</span></td>
+          <td>${esc(r.answers.platform || '')}</td>
+          <td>${esc(r.answers.timing || '')}</td>
+          <td>${esc((r.answers.interests || []).join(', '))}</td>
+          <td class="muted">${esc(r.utm.utm_source || r.source || '')}</td>
+          <td class="muted">${r.createdAt ? esc(new Date(r.createdAt).toLocaleDateString()) : ''}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="9" class="muted" style="padding:32px;text-align:center;">No signups match.</td></tr>';
+
+    $('#row-count').textContent = `${rows.length} of ${signups.rows.length}`;
+
+    $('#sheet thead').querySelectorAll('th').forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+        renderSheet();
+      });
+    });
+  }
+
+  const cell = (row, key) =>
+    ({ platform: row.answers.platform, timing: row.answers.timing, interests: (row.answers.interests || []).join(',') }[key]) ??
+    row[key] ?? '';
+
+  $('#search').addEventListener('input', renderSheet);
+  $('#stage-filter').addEventListener('change', renderSheet);
+
+  $('#export').addEventListener('click', async () => {
+    try {
+      const { filename, csv } = await callFn('exportSignups', { slug: current.slug });
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  /* ── Builder ─────────────────────────────────────────── */
+  const toLocalInput = (v) => {
+    if (!v) return '';
+    const d = v.toDate ? v.toDate() : new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  function fillBuilder() {
+    const d = current.data;
+    $('#b-name').value = d.name || '';
+    $('#b-tagline').value = d.tagline || '';
+    $('#b-pain').value = d.painPoint || '';
+    $('#b-outcomes').value = (d.outcomes || []).join('\n');
+    $('#b-price').value = d.price?.amount ? d.price.amount / 100 : '';
+    $('#b-founding').value = d.price?.foundingAmount ? d.price.foundingAmount / 100 : '';
+    $('#b-founding-until').value = toLocalInput(d.price?.foundingUntil);
+    $('#b-capacity').value = d.capacity || '';
+    $('#b-close').value = toLocalInput(d.enrollCloseAt);
+    $('#b-status').value = d.status || 'interest';
+    $('#b-tz').value = d.schedule?.timezone || 'America/New_York';
+    $('#b-join').value = d.schedule?.joinUrl || '';
+    renderSessions(d.sessions || [], d.schedule?.sessions || []);
+    renderFields(d.formFields || []);
+  }
+
+  /* Session editor. Content sessions and scheduled dates are the
+     same list, joined by index, so Anthony edits one thing. */
+  function renderSessions(content, scheduled) {
+    const count = Math.max(content.length, scheduled.length);
+    const rows = [];
+    for (let i = 0; i < count; i++) {
+      const c = content[i] || {}, s = scheduled[i] || {};
+      rows.push(`<div class="fieldrow" data-session="${i}">
+        <div class="fieldrow-head">
+          <span class="fieldrow-title">Session ${i + 1}</span>
+          <div class="fieldrow-actions"><button class="icon-btn danger" data-remove-session="${i}" title="Remove">×</button></div>
+        </div>
+        <div class="field"><input class="field-input" data-s-title placeholder="Title" value="${esc(c.title || s.title || '')}"></div>
+        <div class="field"><textarea class="field-textarea" data-s-desc placeholder="What happens in this session" style="min-height:64px;">${esc(c.description || '')}</textarea></div>
+        <div class="row-2">
+          <div class="field">
+            <label class="field-label">Starts</label>
+            <input class="field-input" type="datetime-local" data-s-start value="${esc(toLocalInput(s.startsAt))}">
+          </div>
+          <div class="field">
+            <label class="field-label">Minutes</label>
+            <input class="field-input" type="number" data-s-mins value="${esc(s.durationMinutes || 90)}">
+          </div>
+        </div>
+      </div>`);
+    }
+    $('#sessions-editor').innerHTML = rows.join('') ||
+      '<p class="empty">No sessions yet. Add the first one below.</p>';
+
+    $('#sessions-editor').querySelectorAll('[data-remove-session]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.closest('.fieldrow').remove();
+      });
+    });
+  }
+
+  $('#add-session').addEventListener('click', () => {
+    const editor = $('#sessions-editor');
+    if (editor.querySelector('.empty')) editor.innerHTML = '';
+    const i = editor.querySelectorAll('.fieldrow').length;
+    editor.insertAdjacentHTML('beforeend', `<div class="fieldrow" data-session="${i}">
+      <div class="fieldrow-head">
+        <span class="fieldrow-title">Session ${i + 1}</span>
+        <div class="fieldrow-actions"><button class="icon-btn danger" data-remove-session="${i}">×</button></div>
+      </div>
+      <div class="field"><input class="field-input" data-s-title placeholder="Title"></div>
+      <div class="field"><textarea class="field-textarea" data-s-desc placeholder="What happens in this session" style="min-height:64px;"></textarea></div>
+      <div class="row-2">
+        <div class="field"><label class="field-label">Starts</label><input class="field-input" type="datetime-local" data-s-start></div>
+        <div class="field"><label class="field-label">Minutes</label><input class="field-input" type="number" data-s-mins value="90"></div>
+      </div>
+    </div>`);
+    editor.lastElementChild.querySelector('[data-remove-session]')
+      .addEventListener('click', (e) => e.target.closest('.fieldrow').remove());
+  });
+
+  /* Form field editor. This is the piece that lets Anthony build a
+     signup form for any class without touching code. */
+  function renderFields(fields) {
+    $('#fields-editor').innerHTML = fields.map((f, i) => fieldRowHtml(f, i)).join('') ||
+      '<p class="empty">No questions yet. Add one below.</p>';
+    wireFieldRows();
+  }
+
+  function fieldRowHtml(f, i) {
+    const needsOptions = f.type === 'radio' || f.type === 'checkbox' || f.type === 'select';
+    return `<div class="fieldrow" data-fieldrow>
+      <div class="fieldrow-head">
+        <span class="fieldrow-title">${esc({ radio: 'Choice', checkbox: 'Multi Select', text: 'Short Text', textarea: 'Long Text', select: 'Dropdown' }[f.type] || f.type)}</span>
+        <div class="fieldrow-actions">
+          <button class="icon-btn" data-move="-1" title="Move up">↑</button>
+          <button class="icon-btn" data-move="1" title="Move down">↓</button>
+          <button class="icon-btn danger" data-remove-field title="Remove">×</button>
+        </div>
+      </div>
+      <input type="hidden" data-f-type value="${esc(f.type)}">
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Key <span class="field-optional">used in the CRM</span></label>
+          <input class="field-input" data-f-id value="${esc(f.id || '')}" placeholder="platform">
+        </div>
+        <div class="field">
+          <label class="field-label">Required</label>
+          <select class="field-select" data-f-required>
+            <option value="no"${f.required ? '' : ' selected'}>Optional</option>
+            <option value="yes"${f.required ? ' selected' : ''}>Required</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Question</label>
+        <input class="field-input" data-f-label value="${esc(f.label || '')}">
+      </div>
+      <div class="field">
+        <label class="field-label">Helper Text <span class="field-optional">optional</span></label>
+        <input class="field-input" data-f-help value="${esc(f.help || '')}">
+      </div>
+      ${needsOptions ? `<div class="field">
+        <label class="field-label">Options <span class="field-optional">one per line</span></label>
+        <textarea class="field-textarea" data-f-options style="min-height:88px;">${esc((f.options || []).join('\n'))}</textarea>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function wireFieldRows() {
+    const editor = $('#fields-editor');
+    editor.querySelectorAll('[data-remove-field]').forEach((btn) =>
+      btn.addEventListener('click', () => btn.closest('[data-fieldrow]').remove()));
+    editor.querySelectorAll('[data-move]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const row = btn.closest('[data-fieldrow]');
+        const dir = Number(btn.dataset.move);
+        const sibling = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
+        if (sibling?.hasAttribute('data-fieldrow')) {
+          dir < 0 ? row.parentNode.insertBefore(row, sibling) : row.parentNode.insertBefore(sibling, row);
+        }
+      }));
+  }
+
+  document.querySelectorAll('[data-add-field]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const editor = $('#fields-editor');
+      if (editor.querySelector('.empty')) editor.innerHTML = '';
+      editor.insertAdjacentHTML('beforeend', fieldRowHtml({ type: btn.dataset.addField, options: [] }));
+      wireFieldRows();
+    });
+  });
+
+  function readBuilder() {
+    const sessionRows = [...$('#sessions-editor').querySelectorAll('.fieldrow')];
+    const sessions = sessionRows.map((row, i) => ({
+      number: i + 1,
+      title: row.querySelector('[data-s-title]').value.trim(),
+      description: row.querySelector('[data-s-desc]').value.trim()
+    }));
+    const scheduled = sessionRows.map((row, i) => {
+      const start = row.querySelector('[data-s-start]').value;
+      return {
+        title: row.querySelector('[data-s-title]').value.trim() || `Session ${i + 1}`,
+        startsAt: start ? new Date(start).toISOString() : null,
+        durationMinutes: Number(row.querySelector('[data-s-mins]').value) || 90
+      };
+    }).filter((s) => s.startsAt);
+
+    const formFields = [...$('#fields-editor').querySelectorAll('[data-fieldrow]')].map((row) => {
+      const type = row.querySelector('[data-f-type]').value;
+      const field = {
+        id: row.querySelector('[data-f-id]').value.trim(),
+        type,
+        label: row.querySelector('[data-f-label]').value.trim(),
+        required: row.querySelector('[data-f-required]').value === 'yes'
+      };
+      const help = row.querySelector('[data-f-help]').value.trim();
+      if (help) field.help = help;
+      const optionsEl = row.querySelector('[data-f-options]');
+      if (optionsEl) {
+        field.options = optionsEl.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      }
+      return field;
+    }).filter((f) => f.id && f.label);
+
+    const dollars = (sel) => {
+      const v = Number($(sel).value);
+      return Number.isFinite(v) && v > 0 ? Math.round(v * 100) : 0;
+    };
+    const iso = (sel) => ($(sel).value ? new Date($(sel).value).toISOString() : null);
+
+    return {
+      name: $('#b-name').value.trim(),
+      tagline: $('#b-tagline').value.trim(),
+      painPoint: $('#b-pain').value.trim(),
+      outcomes: $('#b-outcomes').value.split('\n').map((s) => s.trim()).filter(Boolean),
+      sessions,
+      price: {
+        amount: dollars('#b-price'),
+        foundingAmount: dollars('#b-founding'),
+        foundingUntil: iso('#b-founding-until'),
+        currency: 'usd'
+      },
+      capacity: Number($('#b-capacity').value) || 0,
+      enrollCloseAt: iso('#b-close'),
+      status: $('#b-status').value,
+      schedule: {
+        timezone: $('#b-tz').value.trim() || 'America/New_York',
+        joinUrl: $('#b-join').value.trim(),
+        sessions: scheduled
+      },
+      formFields
+    };
+  }
+
+  $('#save-class').addEventListener('click', async () => {
+    try {
+      const payload = readBuilder();
+      const ids = payload.formFields.map((f) => f.id);
+      if (new Set(ids).size !== ids.length) {
+        toast('Two questions share the same key. Keys must be unique.', true);
+        return;
+      }
+      await setDoc(doc(db, 'classes', current.slug), { ...payload, updatedAt: new Date() }, { merge: true });
+      current.data = { ...current.data, ...payload };
+      toast('Saved. The public page is updated.');
+      renderDashboard();
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  $('#create-class').addEventListener('click', async () => {
+    const slug = $('#new-slug').value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (!slug) return toast('Enter a URL slug first.', true);
+    const existing = await getDoc(doc(db, 'classes', slug));
+    if (existing.exists()) return toast('A class with that slug already exists.', true);
+
+    await setDoc(doc(db, 'classes', slug), {
+      name: 'Untitled Class', tagline: '', status: 'interest',
+      price: { amount: 0, foundingAmount: 0, foundingUntil: null, currency: 'usd' },
+      capacity: 0, seatsPaid: 0, interestCount: 0,
+      schedule: { sessions: [], timezone: 'America/New_York', joinUrl: '' },
+      // Carry the current form as a starting point so a new class
+      // does not begin from an empty form every time.
+      formFields: current?.data?.formFields || [],
+      outcomes: [], sessions: [], faq: [],
+      createdAt: new Date(), updatedAt: new Date()
+    });
+    toast(`Created ${slug}. It is live at /class.html?c=${slug}`);
+    $('#new-slug').value = '';
+    await boot();
+  });
+
+  /* ── Access codes ────────────────────────────────────── */
+  function renderCodes() {
+    const codes = current.privateData.accessCodes || [];
+    $('#codes-editor').innerHTML = codes.map((c) => `<div class="fieldrow" data-coderow>
+      <div class="fieldrow-head">
+        <span class="fieldrow-title">${esc(c.code || 'New code')}</span>
+        <div class="fieldrow-actions"><button class="icon-btn danger" data-remove-code>×</button></div>
+      </div>
+      <div class="row-3">
+        <div class="field"><label class="field-label">Code</label><input class="field-input" data-c-code value="${esc(c.code || '')}"></div>
+        <div class="field"><label class="field-label">Percent Off</label><input class="field-input" type="number" min="1" max="100" data-c-pct value="${esc(c.percentOff ?? 100)}"></div>
+        <div class="field"><label class="field-label">Max Uses</label><input class="field-input" type="number" min="0" data-c-max value="${esc(c.maxRedemptions || 0)}"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Note <span class="field-optional">used ${esc(c.redemptions || 0)} times</span></label>
+        <input class="field-input" data-c-note value="${esc(c.note || '')}">
+      </div>
+    </div>`).join('') || '<p class="empty">No access codes yet.</p>';
+
+    $('#codes-editor').querySelectorAll('[data-remove-code]').forEach((btn) =>
+      btn.addEventListener('click', () => btn.closest('[data-coderow]').remove()));
+  }
+
+  $('#add-code').addEventListener('click', () => {
+    const editor = $('#codes-editor');
+    if (editor.querySelector('.empty')) editor.innerHTML = '';
+    const prior = current.privateData.accessCodes || [];
+    // Carry redemption counts across the re-render. The DOM rows do
+    // not hold them, so rebuilding from the DOM alone would reset
+    // every code's usage count to zero.
+    const codes = [...editor.querySelectorAll('[data-coderow]')].map((row) => {
+      const read = readCodeRow(row);
+      return { ...read, redemptions: prior.find((c) => c.code === read.code)?.redemptions || 0 };
+    });
+    current.privateData.accessCodes = [
+      ...codes,
+      { code: '', percentOff: 100, maxRedemptions: 0, redemptions: 0, active: true }
+    ];
+    renderCodes();
+  });
+
+  const readCodeRow = (row) => ({
+    code: row.querySelector('[data-c-code]').value.trim().toUpperCase(),
+    percentOff: Number(row.querySelector('[data-c-pct]').value) || 0,
+    maxRedemptions: Number(row.querySelector('[data-c-max]').value) || 0,
+    note: row.querySelector('[data-c-note]').value.trim(),
+    active: true
+  });
+
+  $('#save-codes').addEventListener('click', async () => {
+    try {
+      // Read the stored counts back from Firestore rather than the
+      // in-memory copy, which add-code may have already rewritten.
+      const storedSnap = await getDoc(doc(db, 'classes', current.slug, 'private', 'config'));
+      const existing = (storedSnap.exists() ? storedSnap.data().accessCodes : null)
+        || current.privateData.accessCodes || [];
+      const codes = [...$('#codes-editor').querySelectorAll('[data-coderow]')]
+        .map(readCodeRow)
+        .filter((c) => c.code)
+        .map((c) => ({
+          ...c,
+          // Preserve the redemption count so editing a code's note
+          // does not reset how many times it has been used.
+          redemptions: existing.find((e) => e.code === c.code)?.redemptions || 0
+        }));
+      await setDoc(doc(db, 'classes', current.slug, 'private', 'config'),
+        { accessCodes: codes, updatedAt: new Date() }, { merge: true });
+      current.privateData.accessCodes = codes;
+      renderCodes();
+      toast('Access codes saved.');
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  /* ── Sends ───────────────────────────────────────────── */
+  $('#announce-preview').addEventListener('click', async () => {
+    try {
+      const r = await callFn('announceClass', { slug: current.slug, dryRun: true });
+      toast(`${r.recipientCount} people would receive the announcement.`);
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  $('#announce').addEventListener('click', async () => {
+    try {
+      const preview = await callFn('announceClass', { slug: current.slug, dryRun: true });
+      const ok = await confirmDialog('Announce this class?', `
+        This sends the schedule and the enrollment link to <strong>${preview.recipientCount} people</strong>,
+        and switches the public page over to taking payment.
+        <br><br>This cannot be undone.`);
+      if (!ok) return;
+      const r = await callFn('announceClass', { slug: current.slug });
+      toast(`Announced. ${r.sent} sent${r.failed ? `, ${r.failed} failed` : ''}.`);
+      await loadClass(current.slug);
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  $('#portal-preview').addEventListener('click', async () => {
+    try {
+      const r = await callFn('sendPortalPrep', { slug: current.slug, dryRun: true });
+      toast(`${r.recipientCount} paid attendees have not been sent portal instructions.`);
+    } catch (err) { toast(readableError(err), true); }
+  });
+
+  const sendPortal = async (resend) => {
+    try {
+      const preview = await callFn('sendPortalPrep', { slug: current.slug, resend, dryRun: true });
+      const ok = await confirmDialog('Send portal instructions?',
+        `This emails <strong>${preview.recipientCount} people</strong> the steps to set up their portal account.`);
+      if (!ok) return;
+      const r = await callFn('sendPortalPrep', { slug: current.slug, resend });
+      toast(`Sent to ${r.sent}${r.failed ? `, ${r.failed} failed` : ''}.`);
+    } catch (err) { toast(readableError(err), true); }
+  };
+
+  $('#portal-send').addEventListener('click', () => sendPortal(false));
+  $('#portal-resend').addEventListener('click', () => sendPortal(true));
+</script>
+</body>
+</html>
