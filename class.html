@@ -245,7 +245,7 @@ ${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
 
       <div class="state-note">${price}${scheduled ? '' : ' No payment today. You are only telling me you want in.'}</div>
 
-      <form class="custom-form" id="class-form" novalidate ${scheduled ? 'style="display:none"' : ''}>
+      <form class="custom-form" id="class-form" novalidate>
         <div class="form-alert" data-form-alert role="alert"></div>
         <div class="form-row">
           <div class="field">
@@ -280,9 +280,15 @@ ${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
             <p class="consent-text">By checking this box, you agree to receive marketing and promotional messages from <strong>The One Percent</strong>, including special offers, discounts, and new program updates. Reply <strong>STOP</strong> to opt out at any time.</p>
           </div>
         </div>
+        ${scheduled ? `<div class="field">
+          <label class="field-label" for="promo-code">Promo Code <span class="field-optional">optional</span></label>
+          <input class="field-input" type="text" id="promo-code" data-promo-code placeholder="Enter your code"
+                 autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:0.08em;">
+        </div>` : ''}
         <button type="submit" class="btn-submit" data-submit>
-          <span data-submit-label>${isFull ? 'Add Me To The Waitlist' : 'Put Me On The List'}</span><span>→</span>
+          <span data-submit-label>${isFull ? 'Add Me To The Waitlist' : scheduled ? 'Continue To Payment' : 'Put Me On The List'}</span><span>→</span>
         </button>
+        ${scheduled ? '<p class="form-legal">Secure checkout by Stripe. Your card details never touch this site.</p>' : ''}
         <p class="form-legal">Your seat and your member portal access are set up together. Check your
           email to finish setting up your login.</p>
         <p class="form-legal">Your information is protected and never sold. By joining you agree to our
@@ -338,8 +344,17 @@ ${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
       mount: page.querySelector('#dynamic-fields'),
       form,
       formFields: state.formFields,
-      onSuccess: () => {
+      // Seats on sale: one submit saves the signup and goes to payment.
+      checkout: scheduled,
+      onSuccess: (result) => {
         form.style.display = 'none';
+        if (result && result.enrolled) {
+          const title = success.querySelector('.success-title');
+          const desc = success.querySelector('.success-desc');
+          if (title) title.innerHTML = 'Your seat is <span class="red">confirmed</span>';
+          if (desc) desc.textContent =
+            'Check your email. Two messages are on the way: your confirmation, and the one step to set up your portal access before we start.';
+        }
         success.style.display = 'flex';
         success.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }

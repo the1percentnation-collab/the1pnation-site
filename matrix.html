@@ -619,10 +619,23 @@
           </div>
         </div>
 
+
+        <!-- Promo code. Hidden until the class is scheduled, since there is
+             nothing to discount while we are only gathering interest. -->
+        <div class="field" data-promo-field hidden>
+          <label class="field-label" for="promo-code">Promo Code <span class="field-optional">optional</span></label>
+          <input class="field-input" type="text" id="promo-code" data-promo-code
+                 placeholder="Enter your code" autocomplete="off" spellcheck="false"
+                 style="text-transform:uppercase;letter-spacing:0.08em;">
+        </div>
         <button type="submit" class="btn-submit" data-submit>
           <span data-submit-label>Put Me On The List</span>
           <span>→</span>
         </button>
+
+        <p class="form-legal" data-checkout-legal hidden>
+          Secure checkout by Stripe. Your card details never touch this site.
+        </p>
 
         <p class="form-legal">
           Your seat and your member portal access are set up together. Check your email to
@@ -780,7 +793,13 @@
       panelSub.textContent = 'The dates are set. Seats are held in the order they are claimed.';
       stateNote.innerHTML = price;
       stateNote.hidden = false;
-      form.style.display = 'none';
+      // One form: their details, an optional promo code, then payment. The
+      // separate email-only enrollment box is kept in the markup for anyone
+      // who already signed up and just wants to pay, but it is no longer the
+      // only way in — a first-time visitor can buy without signing up twice.
+      document.querySelector('[data-promo-field]').hidden = false;
+      document.querySelector('[data-checkout-legal]').hidden = false;
+      document.querySelector('[data-submit-label]').textContent = 'Continue To Payment';
       enroll.classList.add('show');
       mountEnrollment({ slug: SLUG, root: enroll });
     } else {
@@ -797,8 +816,17 @@
       mount: fields,
       form,
       formFields: state.formFields,
+      // Scheduled and not full means seats are for sale, so the form saves
+      // the signup and goes on to payment in one submit.
+      checkout: state.status === 'scheduled'
+        && !state.availability.soldOut,
       onSuccess: (result) => {
         form.style.display = 'none';
+        if (result.enrolled) {
+          document.querySelector('.success-title').innerHTML = 'Your seat is <span class="red">confirmed</span>';
+          document.querySelector('[data-success-desc]').textContent =
+            'Check your email. Two messages are on the way: your confirmation, and the one step to set up your portal access before we start.';
+        }
         if (result.waitlist) {
           document.querySelector('.success-title').innerHTML = "You're on the <span class=\"red\">waitlist</span>";
           document.querySelector('[data-success-desc]').textContent =
