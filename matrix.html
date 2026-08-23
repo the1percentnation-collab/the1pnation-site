@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Social Media Matrix | A Mastermind from The One Percent Nation</title>
+  <meta name="description" content="You were handed five platforms, no instructions, and told to be consistent. Four sessions to give you the rules, one platform chosen on purpose, and thirty days of content mapped before you leave.">
+  <link rel="canonical" href="https://the1pnation.com/matrix">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Social Media Matrix">
+  <meta property="og:description" content="You are not bad at social media. You were handed five platforms, no instructions, and told to be consistent. Four sessions to change that.">
+  <meta property="og:url" content="https://the1pnation.com/matrix">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/1p.css">
+  <style>
+    /* ── Page-specific layout. Shared components live in 1p.css ── */
+
+    .hero-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 60% 60% at 20% 30%, black 10%, transparent 70%);
+      opacity: 0.5;
+    }
+    .hero-strip { padding: 140px 32px 56px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero-label { margin-bottom: 20px; }
+    .hero-title {
+      font-family: var(--font-display); font-size: clamp(56px, 8vw, 128px);
+      letter-spacing: 0.02em; line-height: 0.9; margin-bottom: 20px;
+    }
+    .hero-title .red { color: var(--red); }
+    .hero-title .outline { -webkit-text-stroke: 1px rgba(255,255,255,0.25); color: transparent; }
+    .hero-sub { font-size: 19px; font-weight: 300; color: var(--gray-400); line-height: 1.7; max-width: 620px; }
+    .hero-meta {
+      margin-top: 28px; display: flex; gap: 28px; flex-wrap: wrap;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--gray-600);
+    }
+    .hero-meta strong { color: var(--white); font-weight: 400; }
+
+    /* ── THE PAIN POINT. Deliberately the first thing after the
+       hero and set at reading size rather than marketing size. ── */
+    .painpoint {
+      position: relative; z-index: 1; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--black-2);
+    }
+    .painpoint-inner { max-width: 780px; margin: 0 auto; padding: 72px 32px; }
+    .pp-lead {
+      font-family: var(--font-display); font-size: clamp(30px, 4.2vw, 46px);
+      line-height: 1.12; letter-spacing: 0.02em; color: var(--white); margin-bottom: 28px;
+    }
+    .pp-lead .red { color: var(--red); }
+    .painpoint p { font-size: 17px; font-weight: 300; line-height: 1.85; color: var(--gray-400); margin-bottom: 20px; }
+    .painpoint p strong { color: var(--white); font-weight: 500; }
+    .pp-turn {
+      margin-top: 32px; padding: 24px 28px; border-left: 3px solid var(--red);
+      background: var(--charcoal); border-radius: 0 8px 8px 0;
+    }
+    .pp-turn p { margin: 0; color: var(--white); font-weight: 400; font-size: 18px; line-height: 1.7; }
+
+    /* ── MAIN GRID ── */
+    .main-wrap {
+      max-width: 1200px; margin: 0 auto; padding: 72px 32px 40px;
+      display: grid; grid-template-columns: 1fr 480px; gap: 72px; align-items: start;
+      position: relative; z-index: 1;
+    }
+    .block { margin-bottom: 64px; }
+    .block-label { margin-bottom: 18px; }
+    .block-title {
+      font-family: var(--font-display); font-size: clamp(32px, 4vw, 46px);
+      letter-spacing: 0.02em; line-height: 1.05; margin-bottom: 16px;
+    }
+    .block-title .red { color: var(--red); }
+    .block-intro { font-size: 16px; font-weight: 300; color: var(--gray-400); line-height: 1.75; margin-bottom: 28px; }
+
+    /* Outcomes */
+    .outcomes { display: grid; gap: 2px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .outcome { display: flex; gap: 16px; padding: 18px 20px; background: var(--charcoal); align-items: flex-start; }
+    .outcome-num {
+      font-family: var(--font-mono); font-size: 11px; color: var(--red);
+      flex-shrink: 0; padding-top: 3px; min-width: 22px;
+    }
+    .outcome-text { font-size: 15px; line-height: 1.6; color: var(--white); font-weight: 300; }
+
+    /* Sessions */
+    .session {
+      display: grid; grid-template-columns: 76px 1fr; gap: 20px;
+      padding: 26px 0; border-bottom: 1px solid var(--border);
+    }
+    .session:last-child { border-bottom: none; }
+    .session-num {
+      font-family: var(--font-display); font-size: 52px; line-height: 0.85;
+      color: transparent; -webkit-text-stroke: 1px var(--border-red);
+    }
+    .session-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .session-desc { font-size: 15px; font-weight: 300; line-height: 1.7; color: var(--gray-400); }
+
+    /* Mastermind differentiator */
+    .mm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .mm-card { background: var(--charcoal); border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+    .mm-card-icon { font-size: 22px; margin-bottom: 12px; }
+    .mm-card-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .mm-card-text { font-size: 13px; font-weight: 300; line-height: 1.65; color: var(--gray-400); }
+
+    /* Who it is for */
+    .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .fit-col { background: var(--charcoal); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+    .fit-col.no { border-color: rgba(255,255,255,0.06); }
+    .fit-head {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; margin-bottom: 16px; color: var(--red);
+    }
+    .fit-col.no .fit-head { color: var(--gray-600); }
+    .fit-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .fit-list li { font-size: 14px; font-weight: 300; line-height: 1.6; color: var(--gray-400); padding-left: 22px; position: relative; }
+    .fit-list li::before { content: '→'; position: absolute; left: 0; color: var(--red); }
+    .fit-col.no .fit-list li::before { content: '×'; color: var(--gray-600); }
+
+    /* Host */
+    .host { display: flex; gap: 20px; align-items: flex-start; background: var(--charcoal); border: 1px solid var(--border); border-radius: 12px; padding: 26px; }
+    .host-avatar {
+      width: 68px; height: 68px; border-radius: 50%; flex-shrink: 0;
+      background: var(--surface); border: 1px solid var(--border-red);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 26px; color: var(--red);
+    }
+    .host-name { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.04em; }
+    .host-role { font-size: 13px; font-weight: 300; color: var(--gray-400); margin-top: 2px; }
+    .host-bio { font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--gray-400); margin-top: 12px; }
+
+    /* FAQ */
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+      padding: 20px 32px 20px 0; font-family: var(--font-body); font-size: 16px;
+      font-weight: 500; color: var(--white); position: relative;
+    }
+    .faq-q::after {
+      content: '+'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      color: var(--red); font-size: 20px; transition: transform 0.2s;
+    }
+    .faq-item.open .faq-q::after { content: '−'; }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s var(--ease-out); }
+    .faq-item.open .faq-a { max-height: 400px; }
+    .faq-a-inner { padding: 0 32px 22px 0; font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--gray-400); }
+
+    /* Form panel positioning */
+    .panel-col { position: sticky; top: 88px; }
+    .form-panel { position: relative; }
+
+    /* State banner shown above the form (interest / scheduled / full) */
+    .state-note {
+      padding: 14px 20px; font-size: 13px; line-height: 1.6; color: var(--gray-400);
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .state-note strong { color: var(--white); font-weight: 500; }
+
+    .no-account {
+      display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      font-size: 12px; font-weight: 300; color: var(--gray-400); line-height: 1.5;
+    }
+    .no-account span:first-child { color: var(--red); font-size: 14px; }
+
+    /* Enrollment block, revealed only when the class is scheduled */
+    .enroll-box { display: none; padding: 28px 32px 32px; flex-direction: column; gap: 16px; }
+    .enroll-box.show { display: flex; }
+    .enroll-divider {
+      display: flex; align-items: center; gap: 12px; margin: 4px 0;
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--gray-600);
+    }
+    .enroll-divider::before, .enroll-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .code-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+
+    .policy {
+      max-width: 1200px; margin: 0 auto; padding: 0 32px 72px;
+      position: relative; z-index: 1;
+    }
+    .policy-inner {
+      background: var(--charcoal); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    }
+    .policy-item-head {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--red); margin-bottom: 10px;
+    }
+    .policy-item-text { font-size: 13px; font-weight: 300; line-height: 1.7; color: var(--gray-400); }
+
+    @media (max-width: 1024px) {
+      .main-wrap { grid-template-columns: 1fr; gap: 48px; }
+      .panel-col { position: static; }
+      .mm-grid { grid-template-columns: 1fr; }
+      .fit-grid { grid-template-columns: 1fr; }
+      .policy-inner { grid-template-columns: 1fr; gap: 22px; }
+    }
+    @media (max-width: 700px) {
+      .hero-strip { padding: 120px 20px 40px; }
+      .painpoint-inner { padding: 52px 20px; }
+      .main-wrap { padding: 52px 20px 32px; }
+      .policy { padding: 0 20px 52px; }
+      .session { grid-template-columns: 48px 1fr; gap: 14px; }
+      .session-num { font-size: 36px; }
+      .hero-meta { gap: 18px; }
+    }
+  </style>
+</head>
+<body class="noise">
+
+<div class="hero-grid"></div>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-text">
+        <span class="l1">The One Percent</span>
+        <span class="l2">NATION</span>
+      </div>
+    </a>
+    <a href="/" class="nav-back">← Back to Main Site</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<header class="hero-strip">
+  <div class="hero-label"><span class="tag">New Mastermind</span></div>
+  <h1 class="hero-title">
+    THE <span class="red">SOCIAL</span> MEDIA<br>
+    <span class="outline">MATRIX</span>
+  </h1>
+  <p class="hero-sub">
+    Four sessions for people who were handed the platforms and never handed the rules.
+    You leave with one platform chosen on purpose, a message people can repeat, and
+    thirty days of content already mapped.
+  </p>
+  <div class="hero-meta">
+    <div><strong>4</strong> Live Sessions</div>
+    <div><strong>Capped</strong> Room</div>
+    <div><strong>Hot Seats</strong> + Profile Teardowns</div>
+    <div><strong>Replays</strong> Included</div>
+  </div>
+</header>
+
+<!-- ══ THE PAIN POINT ══
+     First thing after the hero, on purpose. Nobody buys the
+     solution until they feel understood about the problem. -->
+<section class="painpoint">
+  <div class="painpoint-inner">
+    <div class="pp-lead fade-up">
+      You are not bad at social media.<br>
+      You were handed five platforms, <span class="red">no instructions</span>, and told to be consistent.
+    </div>
+    <div class="fade-up d1">
+      <p>
+        So you post when you feel inspired. You go quiet when you do not. You watch people
+        with half your experience build an audience while your best work sits unseen. You
+        have saved a hundred posts about what you are supposed to be doing and you have not
+        used one of them.
+      </p>
+      <p>
+        And every time you sit down to actually post, the same question stops you cold.
+        <strong>Where do I even start.</strong>
+      </p>
+      <p>
+        You have been told the answer is discipline. Post more. Show up daily. Be consistent.
+        So you tried that, and it did not work either, and now you quietly think the problem
+        might be you.
+      </p>
+      <p>
+        It is not. You are being consistent inside a system whose rules nobody explained.
+        The platforms are not chaos. They are a matrix. Every one of them decides what to
+        show and who to show it to, and every one of them decides differently. Once you can
+        see the rules, the work stops feeling like guessing.
+      </p>
+      <div class="pp-turn">
+        <p>
+          That is not a discipline problem. It is a clarity problem.<br>
+          Four sessions. You walk out with the rules, and a plan you can actually run.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ MAIN ══ -->
+<div class="main-wrap">
+
+  <!-- ── LEFT: THE OFFER ── -->
+  <main>
+
+    <!-- What you walk out with -->
+    <section class="block">
+      <div class="block-label fade-up"><span class="tag">The Outcome</span></div>
+      <h2 class="block-title fade-up">WHAT YOU <span class="red">WALK OUT</span> WITH</h2>
+      <p class="block-intro fade-up">
+        Not notes. Not inspiration. These are the eight things you will have finished and in
+        your hands by the end of the final session.
+      </p>
+      <div class="outcomes stagger-list">
+        <div class="outcome"><div class="outcome-num">01</div><div class="outcome-text">One platform chosen on purpose, and the reason you chose it</div></div>
+        <div class="outcome"><div class="outcome-num">02</div><div class="outcome-text">Your positioning in one sentence that other people can repeat</div></div>
+        <div class="outcome"><div class="outcome-num">03</div><div class="outcome-text">The four content types, and which one you have been overusing</div></div>
+        <div class="outcome"><div class="outcome-num">04</div><div class="outcome-text">A weekly publishing rhythm built around your real calendar, not an ideal one</div></div>
+        <div class="outcome"><div class="outcome-num">05</div><div class="outcome-text">Thirty days of content mapped before the final session ends</div></div>
+        <div class="outcome"><div class="outcome-num">06</div><div class="outcome-text">A profile that turns a visitor into a follower and a follower into a conversation</div></div>
+        <div class="outcome"><div class="outcome-num">07</div><div class="outcome-text">The three metrics that matter, and permission to ignore every other one</div></div>
+        <div class="outcome"><div class="outcome-num">08</div><div class="outcome-text">A path from audience to offer that does not require becoming a salesperson</div></div>
+      </div>
+    </section>
+
+    <!-- Sessions -->
+    <section class="block">
+      <div class="block-label fade-up"><span class="tag">The Four Sessions</span></div>
+      <h2 class="block-title fade-up">HOW THE <span class="red">ROOM</span> RUNS</h2>
+      <p class="block-intro fade-up">
+        Each session is ninety minutes and each one ends with something built, not something
+        to think about later.
+      </p>
+
+      <div class="session fade-up">
+        <div class="session-num">01</div>
+        <div>
+          <h3 class="session-title">THE AUDIT</h3>
+          <p class="session-desc">
+            Where you actually stand. How each platform decides what to show and to whom, in
+            plain language. Then you choose the one platform that fits your work and your
+            life, and you let the rest go without guilt. Most people leave this session
+            relieved, because it turns out they were trying to run four races at once.
+          </p>
+        </div>
+      </div>
+
+      <div class="session fade-up">
+        <div class="session-num">02</div>
+        <div>
+          <h3 class="session-title">THE MESSAGE</h3>
+          <p class="session-desc">
+            Positioning, voice, and the one sentence everything else hangs on. If the people
+            who already know you cannot repeat what you do, they cannot refer you. We fix
+            that first, because no amount of posting rescues a message nobody can hold onto.
+          </p>
+        </div>
+      </div>
+
+      <div class="session fade-up">
+        <div class="session-num">03</div>
+        <div>
+          <h3 class="session-title">THE ENGINE</h3>
+          <p class="session-desc">
+            The four content types, how to batch them, and the weekly rhythm that survives a
+            genuinely busy month. Including the part nobody teaches: exactly what to do on
+            the days you have nothing to say. You will map thirty days before this session
+            ends.
+          </p>
+        </div>
+      </div>
+
+      <div class="session fade-up">
+        <div class="session-num">04</div>
+        <div>
+          <h3 class="session-title">THE ASK</h3>
+          <p class="session-desc">
+            Turning attention into conversations, and conversations into clients. How to make
+            an offer without becoming the person nobody wants in their inbox. This is where
+            the audience finally connects to the work you are actually trying to do.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mastermind, not a course -->
+    <section class="block">
+      <div class="block-label fade-up"><span class="tag">Why Mastermind</span></div>
+      <h2 class="block-title fade-up">THIS IS A <span class="red">ROOM</span>, NOT A COURSE</h2>
+      <p class="block-intro fade-up">
+        A course is content you consume alone, usually at eleven at night, usually only the
+        first two modules. This is different, and the capped room is what makes it possible.
+      </p>
+      <div class="mm-grid stagger-list">
+        <div class="mm-card">
+          <div class="mm-card-icon">◎</div>
+          <div class="mm-card-title">LIVE TEARDOWNS</div>
+          <p class="mm-card-text">
+            Real profiles on the screen, including yours if you want it. You learn more from
+            watching one profile get rebuilt than from ten hours of theory.
+          </p>
+        </div>
+        <div class="mm-card">
+          <div class="mm-card-icon">◆</div>
+          <div class="mm-card-title">HOT SEATS</div>
+          <p class="mm-card-text">
+            You bring the thing you are stuck on. The room works it with you. Nobody leaves a
+            session still holding the same question they walked in with.
+          </p>
+        </div>
+        <div class="mm-card">
+          <div class="mm-card-icon">▲</div>
+          <div class="mm-card-title">ACCOUNTABILITY POD</div>
+          <p class="mm-card-text">
+            A small group that keeps running between sessions. This is the piece that decides
+            whether you are still publishing in week six.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fit -->
+    <section class="block">
+      <div class="block-label fade-up"><span class="tag">Honest Fit</span></div>
+      <h2 class="block-title fade-up">WHO THIS IS <span class="red">FOR</span></h2>
+      <div class="fit-grid fade-up">
+        <div class="fit-col">
+          <div class="fit-head">This is for you if</div>
+          <ul class="fit-list">
+            <li>You are good at what you do and almost nobody knows it</li>
+            <li>You have started and stopped more than once</li>
+            <li>You have an offer, a practice, or a book and no reliable way to talk about it</li>
+            <li>You want a system you can run, not motivation that wears off</li>
+            <li>You are willing to publish while it is still imperfect</li>
+          </ul>
+        </div>
+        <div class="fit-col no">
+          <div class="fit-head">This is not for you if</div>
+          <ul class="fit-list">
+            <li>You are looking for growth hacks or follower counts</li>
+            <li>You want someone to run your accounts for you</li>
+            <li>You are not willing to be visible in any form</li>
+            <li>You want results without publishing anything</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Host -->
+    <section class="block">
+      <div class="block-label fade-up"><span class="tag">Who Leads It</span></div>
+      <div class="host fade-up">
+        <div class="host-avatar">AB</div>
+        <div>
+          <div class="host-name">ANTHONY BROWN</div>
+          <div class="host-role">Founder, The One Percent Nation</div>
+          <p class="host-bio">
+            Anthony coaches people who are successful on paper and misaligned in practice.
+            The One Percent exists to redefine success around alignment and purpose rather
+            than titles and metrics. This mastermind applies that same standard to visibility:
+            not louder, not more often, just clearer and more consistent than you have managed
+            on your own.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="block" id="faq">
+      <div class="block-label fade-up"><span class="tag">Questions</span></div>
+      <h2 class="block-title fade-up">BEFORE YOU <span class="red">DECIDE</span></h2>
+      <div class="fade-up">
+        <div class="faq-item">
+          <button class="faq-q" type="button">I am starting from zero. Is this too advanced?</button>
+          <div class="faq-a"><div class="faq-a-inner">
+            No. Starting from zero is the easiest place to build from, because there is nothing
+            to undo. The first session puts everyone on the same baseline before we go anywhere.
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">What if I cannot make a session live?</button>
+          <div class="faq-a"><div class="faq-a-inner">
+            Every session is recorded and posted within twenty four hours. The accountability
+            pod runs between sessions, so you can still take part even if you miss one live.
+            That said, the hot seats are the value, and they only happen live.
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">Do I have to create an account to join the list?</button>
+          <div class="faq-a"><div class="faq-a-inner">
+            No. Joining the interest list takes your first name, your email, and one question.
+            Nothing else. Portal access gets set up later, once you enrol, and I will walk you
+            through it then.
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">Which platforms does this actually cover?</button>
+          <div class="faq-a"><div class="faq-a-inner">
+            Instagram, TikTok, LinkedIn, Facebook, and YouTube. You will not work all five. Part
+            of the first session is choosing the one that fits you and deliberately setting the
+            rest aside. The principles carry across all of them.
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">When does it run?</button>
+          <div class="faq-a"><div class="faq-a-inner">
+            The dates are set once the room is the right size. Join the list and you will get
+            the schedule before it goes public, along with the first chance to claim a seat.
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── RIGHT: SIGNUP PANEL ── -->
+  <aside class="panel-col">
+    <div class="form-panel" id="signup">
+      <div class="form-panel-header">
+        <div class="form-panel-title" data-panel-title>JOIN THE LIST</div>
+        <div class="form-panel-sub" data-panel-sub>
+          Be first to get the dates, and first to claim a seat.
+        </div>
+
+        <div class="spots-row" data-meter hidden>
+          <div class="spots-label" data-meter-label>Interest</div>
+          <div class="spots-bar-wrap"><div class="spots-bar" data-meter-bar></div></div>
+          <div class="spots-count" data-meter-count>0</div>
+        </div>
+      </div>
+
+      <div class="state-note" data-state-note hidden></div>
+
+      <!-- Stage one: interest. No payment, no account. -->
+      <form class="custom-form" id="matrix-form" novalidate>
+        <div class="form-alert" data-form-alert role="alert"></div>
+
+        <div class="no-account">
+          <span>◆</span>
+          <span>No account needed today. Two questions and you are done.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label" for="firstName">First Name <span class="field-required">*</span></label>
+            <input class="field-input" type="text" id="firstName" name="firstName" placeholder="Your first name" autocomplete="given-name">
+            <div class="field-error">Please enter your first name.</div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="email">Email <span class="field-required">*</span></label>
+            <input class="field-input" type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
+            <div class="field-error">Please enter a valid email address.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="phone">Phone <span class="field-optional">optional, for reminders</span></label>
+          <input class="field-input" type="tel" id="phone" name="phone" placeholder="+1 (555) 000-0000" autocomplete="tel">
+        </div>
+
+        <!-- Schema-driven fields render here, from the class doc -->
+        <div id="dynamic-fields"></div>
+
+        <div class="consent-block">
+          <div class="consent-item">
+            <div class="consent-box" data-consent="sms"></div>
+            <p class="consent-text">By checking this box, you agree to receive text messages from <strong>The One Percent</strong> related to your inquiry, bookings, or program updates. Message frequency may vary. Message and data rates may apply. Reply <strong>HELP</strong> for assistance or <strong>STOP</strong> to opt out.</p>
+          </div>
+          <div class="consent-item">
+            <div class="consent-box" data-consent="marketing"></div>
+            <p class="consent-text">By checking this box, you agree to receive marketing and promotional messages from <strong>The One Percent</strong>, including special offers, discounts, and new program updates. Reply <strong>STOP</strong> to opt out at any time.</p>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" data-submit>
+          <span data-submit-label>Put Me On The List</span>
+          <span>→</span>
+        </button>
+
+        <p class="form-legal">
+          Your information is protected and never sold. By joining you agree to our
+          <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Service</a>.
+        </p>
+      </form>
+
+      <!-- Stage two: enrollment. Revealed only once the class is
+           scheduled, driven by the class status from the server. -->
+      <div class="enroll-box" data-enroll>
+        <div class="form-alert" data-form-alert role="alert"></div>
+        <div class="field">
+          <label class="field-label" for="enroll-email">Your Email</label>
+          <input class="field-input" type="email" id="enroll-email" data-enroll-email placeholder="The email you signed up with" autocomplete="email">
+        </div>
+        <button type="button" class="btn-submit" data-enroll-pay>Claim My Seat</button>
+        <div class="enroll-divider">or</div>
+        <div class="field">
+          <label class="field-label" for="enroll-code">Have an access code?</label>
+          <div class="code-row">
+            <input class="field-input" type="text" id="enroll-code" data-enroll-code placeholder="Enter your code" autocomplete="off" spellcheck="false">
+            <button type="button" class="btn-ghost" data-enroll-redeem>Apply</button>
+          </div>
+        </div>
+        <p class="form-legal">Secure checkout by Stripe. Your card details never touch this site.</p>
+      </div>
+
+      <!-- Success -->
+      <div class="form-success" data-success>
+        <div class="success-icon">✓</div>
+        <div class="success-title">You're <span class="red">on the list</span></div>
+        <div class="success-desc" data-success-desc>
+          Check your email for confirmation. When the dates are set you will hear from me
+          before anyone else, with the first chance to claim a seat.
+        </div>
+        <div class="success-next">Nothing else to do right now</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ══ POLICY ══ -->
+<section class="policy">
+  <div class="policy-inner fade-up">
+    <div>
+      <div class="policy-item-head">The Guarantee</div>
+      <p class="policy-item-text">
+        Attend the first session. If it is not what you expected, tell me before the second
+        session and I will refund you in full, no explanation required.
+      </p>
+    </div>
+    <div>
+      <div class="policy-item-head">If You Miss One</div>
+      <p class="policy-item-text">
+        Replays are posted within twenty four hours and stay in the portal. If you have to
+        step out of a cohort entirely, your seat carries to the next one.
+      </p>
+    </div>
+    <div>
+      <div class="policy-item-head">The Room Is Capped</div>
+      <p class="policy-item-text">
+        The cap is real and it is not a marketing device. Past it, the hot seats and profile
+        teardowns stop working, which is the whole reason to be in the room.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-copy">© 2026 The One Percent Nation. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/webinar.html">Live Webinars</a>
+    <a href="/">Back to Site</a>
+  </div>
+</footer>
+
+<script type="module">
+  import { callFn } from '/assets/firebase-init.js';
+  import { mountClassForm, mountEnrollment, initConsentToggles, initScrollReveal } from '/assets/class-form.js';
+
+  const SLUG = 'social-media-matrix';
+
+  initConsentToggles();
+  initScrollReveal();
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach((i) => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  const form = document.getElementById('matrix-form');
+  const fields = document.getElementById('dynamic-fields');
+  const success = document.querySelector('[data-success]');
+  const enroll = document.querySelector('[data-enroll]');
+  const stateNote = document.querySelector('[data-state-note]');
+  const panelTitle = document.querySelector('[data-panel-title]');
+  const panelSub = document.querySelector('[data-panel-sub]');
+
+  /**
+   * Everything below renders from live server state rather than
+   * hardcoded copy. The seat and interest numbers are real counts
+   * from Firestore, and the price and deadline the page shows are
+   * the same ones the checkout will enforce.
+   */
+  function renderState(state) {
+    const { pricing, availability, status } = state;
+
+    // Meter. Before the class is scheduled it shows interest; once
+    // scheduled it shows seats actually remaining.
+    const meter = document.querySelector('[data-meter]');
+    const label = document.querySelector('[data-meter-label]');
+    const bar = document.querySelector('[data-meter-bar]');
+    const count = document.querySelector('[data-meter-count]');
+
+    if (status === 'scheduled' && availability.capacity) {
+      const taken = availability.capacity - (availability.seatsLeft ?? 0);
+      label.textContent = 'Seats Left';
+      count.textContent = availability.seatsLeft ?? 0;
+      bar.style.width = `${Math.min(100, (taken / availability.capacity) * 100)}%`;
+      meter.hidden = false;
+    } else if (state.interestCount > 0) {
+      label.textContent = 'On The List';
+      count.textContent = state.interestCount;
+      bar.style.width = availability.capacity
+        ? `${Math.min(100, (state.interestCount / availability.capacity) * 100)}%`
+        : '100%';
+      meter.hidden = false;
+    }
+
+    const price = pricing.foundingActive
+      ? `<strong>${pricing.display}</strong> at the founding rate, normally ${pricing.fullDisplay}.`
+      : `<strong>${pricing.display}</strong> for the full four sessions.`;
+
+    if (availability.soldOut || status === 'waitlist') {
+      panelTitle.textContent = 'JOIN THE WAITLIST';
+      panelSub.textContent = 'This cohort is full. You will be first in line for the next one.';
+      stateNote.innerHTML = 'The room is capped at ' + availability.capacity +
+        ' and this cohort filled. Add your name and you get the next one before it goes public.';
+      stateNote.hidden = false;
+      document.querySelector('[data-submit-label]').textContent = 'Add Me To The Waitlist';
+    } else if (status === 'scheduled') {
+      panelTitle.textContent = 'CLAIM YOUR SEAT';
+      panelSub.textContent = 'The dates are set. Seats are held in the order they are claimed.';
+      stateNote.innerHTML = price;
+      stateNote.hidden = false;
+      form.style.display = 'none';
+      enroll.classList.add('show');
+      mountEnrollment({ slug: SLUG, root: enroll });
+    } else {
+      stateNote.innerHTML = price + ' No payment today. You are only telling me you want in.';
+      stateNote.hidden = false;
+    }
+  }
+
+  try {
+    const state = await callFn('getClassState', { slug: SLUG });
+
+    mountClassForm({
+      slug: SLUG,
+      mount: fields,
+      form,
+      formFields: state.formFields,
+      onSuccess: (result) => {
+        form.style.display = 'none';
+        if (result.waitlist) {
+          document.querySelector('.success-title').innerHTML = "You're on the <span class=\"red\">waitlist</span>";
+          document.querySelector('[data-success-desc]').textContent =
+            'This cohort is full, and you are at the front of the queue. If a seat opens you get the first message, and you hear about the next cohort before it goes public.';
+        }
+        success.style.display = 'flex';
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+
+    renderState(state);
+  } catch (err) {
+    // The backend is not reachable. Rather than showing a broken
+    // form, point people at email so a lead is never simply lost.
+    console.error('Class state unavailable', err);
+    stateNote.innerHTML =
+      'Signups are briefly unavailable. Email <a href="mailto:the1percentnation@gmail.com" style="color:var(--red)">the1percentnation@gmail.com</a> and I will add you to the list myself.';
+    stateNote.hidden = false;
+    form.style.display = 'none';
+  }
+</script>
+</body>
+</html>

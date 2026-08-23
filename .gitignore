@@ -67,3 +67,10 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Cloud Functions
+functions/node_modules/
+# functions/.env is committed on purpose: it holds only public
+# URLs and display names. Secrets live in Secret Manager.
+functions/.env.local
+functions/.env.*.local

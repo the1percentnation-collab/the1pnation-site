@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// ============================================================
+// THE ONE PERCENT NATION — FIRESTORE SECURITY RULES
+//
+// Posture: the public internet can READ published class copy and
+// nothing else. Every write, and every read of anyone's personal
+// information, goes through a Cloud Function with the Admin SDK.
+//
+// The signup sheet is the sensitive asset here. It holds names,
+// emails, phone numbers, and consent records. No client, signed in
+// or not, can read or write it directly.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Published class copy. Public read so matrix.html and
+    // class.html can render without an account. Writes are admin
+    // only, and counters (seatsPaid, interestCount) are written by
+    // Cloud Functions via the Admin SDK, which bypasses these rules.
+    match /classes/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Private per-class config: GoHighLevel form id, email
+      // templates, Stripe ids, access codes. Admin only, and
+      // deliberately a subcollection because rules cannot hide
+      // individual fields on a publicly readable document.
+      match /private/{doc} {
+        allow read, write: if isAdmin();
+      }
+
+      // Signups. Locked completely. Reads for the admin console go
+      // through the listSignups callable, not through the client
+      // SDK, so that even a compromised admin session cannot bulk
+      // export without hitting a function that logs the access.
+      match /signups/{id} {
+        allow read, write: if false;
+      }
+    }
+
+    // Audit trail of admin sends (announcements, portal prep).
+    // Written by functions, readable by admin so the console can
+    // show what already went out and to how many people.
+    match /sendLog/{entry} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

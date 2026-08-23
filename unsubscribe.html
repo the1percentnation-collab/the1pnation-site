@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribe | The One Percent Nation</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/1p.css">
+  <style>
+    .wrap { max-width: 520px; margin: 0 auto; padding: 180px 24px 100px; text-align: center; position: relative; z-index: 1; }
+    h1 { font-family: var(--font-display); font-size: clamp(38px, 6vw, 56px); letter-spacing: 0.02em; margin-bottom: 18px; }
+    h1 .red { color: var(--red); }
+    p { font-size: 16px; font-weight: 300; line-height: 1.8; color: var(--gray-400); margin-bottom: 24px; }
+  </style>
+</head>
+<body class="noise">
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-text"><span class="l1">The One Percent</span><span class="l2">NATION</span></div>
+    </a>
+    <a href="/" class="nav-back">← Back to Main Site</a>
+  </div>
+</nav>
+
+<div class="wrap" id="wrap">
+  <h1>ONE MOMENT</h1>
+  <p>Updating your preferences.</p>
+</div>
+
+<footer>
+  <div class="footer-copy">© 2026 The One Percent Nation. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="/privacy.html">Privacy Policy</a>
+    <a href="/">Back to Site</a>
+  </div>
+</footer>
+
+<script>
+  // The unsubscribe function verifies a signed token, so a link
+  // cannot be edited to unsubscribe somebody else.
+  (async () => {
+    const wrap = document.getElementById('wrap');
+    const q = location.search;
+    const endpoint = `https://us-central1-the-1p-leadership.cloudfunctions.net/unsubscribe${q}`;
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      wrap.innerHTML = data.ok
+        ? '<h1>YOU ARE <span class="red">UNSUBSCRIBED</span></h1>' +
+          '<p>You will not receive further emails about this class. No hard feelings, and the door stays open.</p>' +
+          '<p><a href="/" style="color:var(--red);">Back to the site</a></p>'
+        : '<h1>LINK <span class="red">EXPIRED</span></h1>' +
+          '<p>This unsubscribe link is not valid. Email <a href="mailto:the1percentnation@gmail.com" style="color:var(--red);">the1percentnation@gmail.com</a> and I will take you off the list myself.</p>';
+    } catch {
+      wrap.innerHTML = '<h1>SOMETHING <span class="red">WENT WRONG</span></h1>' +
+        '<p>Email <a href="mailto:the1percentnation@gmail.com" style="color:var(--red);">the1percentnation@gmail.com</a> and I will remove you manually.</p>';
+    }
+  })();
+</script>
+</body>
+</html>

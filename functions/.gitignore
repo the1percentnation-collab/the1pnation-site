@@ -1,0 +1,8 @@
+node_modules/
+
+# .env is committed on purpose: it holds only public URLs and
+# display names, no credentials. Secrets live in Google Secret
+# Manager (see lib/config.js). Local overrides stay out.
+.env.local
+.env.*.local
+*.log
