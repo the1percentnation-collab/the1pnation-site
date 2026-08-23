@@ -110,7 +110,18 @@ const isEmpty = (v) => (Array.isArray(v) ? v.length === 0 : !v);
  * @param {Array}  opts.formFields  schema, from the class doc
  * @param {Function} [opts.onSuccess]
  */
-export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }) {
+/**
+ * The class signup form.
+ *
+ * `checkout: true` turns it into the buying form: the same details, plus an
+ * optional promo code, and on submit it saves the signup and then takes the
+ * person straight to payment. That ordering is deliberate — the record is
+ * written first, so someone who abandons Stripe is still a lead you have,
+ * and a code that turns out to be invalid costs them nothing.
+ *
+ * A code worth 100 percent enrols directly and never reaches Stripe.
+ */
+export function mountClassForm({ slug, mount, form, formFields = [], onSuccess, checkout = false }) {
   const renderedAt = Date.now();
 
   mount.innerHTML = formFields.map(renderField).join('\n');
@@ -191,6 +202,7 @@ export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }
     if (button) button.disabled = true;
     if (buttonLabel) buttonLabel.textContent = 'Saving your spot...';
 
+    let savedSignup = false;
     try {
       const result = await callFn('submitSignup', {
         slug,
@@ -208,9 +220,37 @@ export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }
           marketing: form.querySelector('[data-consent="marketing"]')?.classList.contains('checked') || false
         }
       });
-      onSuccess?.(result, { firstName, email });
+      savedSignup = true;
+
+      if (!checkout || result.waitlist) {
+        onSuccess?.(result, { firstName, email });
+        return;
+      }
+
+      // Their details are saved. Now money.
+      const code = form.querySelector('[data-promo-code]')?.value.trim() || '';
+      if (buttonLabel) buttonLabel.textContent = code ? 'Checking your code...' : 'Opening secure checkout...';
+
+      if (code) {
+        const redeemed = await callFn('redeemAccessCode', { slug, email, code });
+        if (redeemed.enrolled) {
+          // A full comp: no payment page, the seat is already theirs.
+          onSuccess?.({ ...result, enrolled: true }, { firstName, email });
+          return;
+        }
+        location.href = redeemed.url;
+        return;
+      }
+
+      const { url } = await callFn('startCheckout', { slug, email, firstName });
+      location.href = url;
     } catch (err) {
-      showAlert(readableError(err));
+      // Distinguish the two failures. If the signup itself failed they have
+      // no record and should try again; if only the payment step failed,
+      // say so plainly rather than implying their details were lost.
+      showAlert(savedSignup
+        ? `${readableError(err)} Your details are saved — you can try payment again.`
+        : readableError(err));
       if (button) button.disabled = false;
       if (buttonLabel) buttonLabel.textContent = originalLabel;
     }
