@@ -511,7 +511,7 @@ export const stripeWebhook = onRequest(
 export const announceClass = onCall(
   { ...callOpts, secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET], timeoutSeconds: 540 },
   async (request) => {
-    const uid = assertAdmin(request);
+    const uid = await assertAdmin(request);
     const slug = clean(request.data?.slug, 80);
     const dryRun = Boolean(request.data?.dryRun);
     if (!slug) bad('A class slug is required.');
@@ -605,7 +605,7 @@ export const retryPortalAccounts = onCall(
     timeoutSeconds: 540
   },
   async (request) => {
-    const uid = assertAdmin(request);
+    const uid = await assertAdmin(request);
     const slug = clean(request.data?.slug, 80);
     if (!slug) bad('A class slug is required.');
 
@@ -675,7 +675,7 @@ export const retryPortalAccounts = onCall(
 export const sendPortalPrep = onCall(
   { ...callOpts, secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET], timeoutSeconds: 540 },
   async (request) => {
-    const uid = assertAdmin(request);
+    const uid = await assertAdmin(request);
     const slug = clean(request.data?.slug, 80);
     const resend = Boolean(request.data?.resend);
     if (!slug) bad('A class slug is required.');
@@ -714,7 +714,7 @@ export const sendPortalPrep = onCall(
  * read passes through one auditable place.
  */
 export const listSignups = onCall(callOpts, async (request) => {
-  assertAdmin(request);
+  await assertAdmin(request);
   const slug = clean(request.data?.slug, 80);
   if (!slug) bad('A class slug is required.');
 
@@ -767,7 +767,7 @@ export const listSignups = onCall(callOpts, async (request) => {
 });
 
 export const exportSignups = onCall(callOpts, async (request) => {
-  assertAdmin(request);
+  await assertAdmin(request);
   const slug = clean(request.data?.slug, 80);
   if (!slug) bad('A class slug is required.');
 
