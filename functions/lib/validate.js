@@ -1,4 +1,5 @@
 import { HttpsError } from 'firebase-functions/v2/https';
+import { db } from './db.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -91,11 +92,39 @@ export function cleanAttribution(source = {}) {
   return { utm, referrer: clean(source.referrer, 300), landingPath: clean(source.landingPath, 200) };
 }
 
-export function assertAdmin(request) {
-  if (!request.auth?.token?.admin) {
+/**
+ * Authorise an admin caller.
+ *
+ * Two admin systems share this Firebase project. This codebase grants the
+ * `admin` custom claim through scripts/grant-admin.js, while the member
+ * portal (repo The-1P-Leadership) uses an `owner` role claim and a
+ * users/{uid}.role == 'admin' document. The Class Console is served from the
+ * portal now, so the person operating it signs in with their portal identity
+ * — which carries neither the claim nor any way to get it without someone
+ * running a script by hand.
+ *
+ * Accept all three, matching the isClassAdmin() bridge in the portal's
+ * firestore.rules. Anything less means the console renders for the owner and
+ * then every button he presses fails.
+ *
+ * Async because the Firestore role lookup is a read; every call site already
+ * awaits it.
+ */
+export async function assertAdmin(request) {
+  const uid = request.auth?.uid;
+  if (!uid) {
     throw new HttpsError('permission-denied', 'This action requires an administrator account.');
   }
-  return request.auth.uid;
+  const token = request.auth.token || {};
+  if (token.admin === true || token.role === 'owner') return uid;
+
+  try {
+    const snap = await db.collection('users').doc(uid).get();
+    if (snap.exists && snap.data().role === 'admin') return uid;
+  } catch (err) {
+    // A failed lookup must not read as authorised.
+  }
+  throw new HttpsError('permission-denied', 'This action requires an administrator account.');
 }
 
 export function bad(message) {

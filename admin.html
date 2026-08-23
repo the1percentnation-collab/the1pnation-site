@@ -138,26 +138,46 @@
 
 <!-- ══ AUTH GATE ══
      A client-side gate is convenience only. The real enforcement is
-     the admin custom claim, checked inside every admin function and
-     in firestore.rules. ══ -->
+     assertAdmin() inside every admin function and isClassAdmin() in
+     firestore.rules — both of which accept the portal's owner/admin
+     identity as well as this codebase's `admin` custom claim.
+
+     This console is served from the member portal's own domain, so a
+     portal session is already valid here: the sign-in link below is
+     the primary path. The password form stays for accounts that were
+     given the admin claim directly, but it cannot work for an account
+     that signs in with Google (there is no password to match), which
+     is why it is no longer the first thing offered. ══ -->
 <div class="gate" id="gate">
   <div class="form-panel">
     <div class="form-panel-header">
       <div class="form-panel-title">SIGN IN</div>
       <div class="form-panel-sub">Administrator access only.</div>
     </div>
-    <form class="custom-form" id="signin-form">
-      <div class="form-alert" data-form-alert role="alert"></div>
-      <div class="field">
-        <label class="field-label" for="gate-email">Email</label>
-        <input class="field-input" type="email" id="gate-email" autocomplete="email">
-      </div>
-      <div class="field">
-        <label class="field-label" for="gate-pass">Password</label>
-        <input class="field-input" type="password" id="gate-pass" autocomplete="current-password">
-      </div>
-      <button type="submit" class="btn-submit"><span>Sign In</span><span>→</span></button>
-    </form>
+    <div class="form-alert" data-form-alert role="alert"></div>
+    <p class="card-hint" style="margin-bottom:16px;">
+      Use the same account you use for the member portal.
+    </p>
+    <a class="btn-submit" id="portal-signin" href="/login.html?next=%2Fclass-admin.html"
+       style="display:flex;justify-content:center;text-decoration:none;margin-bottom:18px;">
+      <span>Sign in through the portal</span><span>→</span>
+    </a>
+    <details>
+      <summary style="cursor:pointer;font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gray-600);">
+        Sign in with a password instead
+      </summary>
+      <form class="custom-form" id="signin-form" style="margin-top:14px;">
+        <div class="field">
+          <label class="field-label" for="gate-email">Email</label>
+          <input class="field-input" type="email" id="gate-email" autocomplete="email">
+        </div>
+        <div class="field">
+          <label class="field-label" for="gate-pass">Password</label>
+          <input class="field-input" type="password" id="gate-pass" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-submit"><span>Sign In</span><span>→</span></button>
+      </form>
+    </details>
   </div>
 </div>
 
@@ -430,7 +450,7 @@
   try {
     ({ auth, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await firebaseAuth());
   } catch (err) {
-    const alert = $('#signin-form [data-form-alert]');
+    const alert = $('#gate [data-form-alert]');
     alert.textContent = 'Could not load the sign in library. Check your connection and reload the page.';
     alert.classList.add('show');
     $('#signin-form').querySelector('.btn-submit').disabled = true;
@@ -439,7 +459,7 @@
 
   $('#signin-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const alert = $('#signin-form [data-form-alert]');
+    const alert = $('#gate [data-form-alert]');
     alert.classList.remove('show');
     try {
       await signInWithEmailAndPassword(auth, $('#gate-email').value.trim(), $('#gate-pass').value);
@@ -457,14 +477,27 @@
       $('#signout').hidden = true; $('#who').textContent = '';
       return;
     }
-    // The admin claim is what actually authorises anything. If it
-    // is missing, every admin function will reject regardless of
-    // what this page shows, so refuse here rather than render a
-    // console whose every button fails.
+    // Mirror assertAdmin() in the classes functions and isClassAdmin()
+    // in firestore.rules: this codebase's `admin` claim, the portal's
+    // `owner` role claim, or users/{uid}.role == 'admin'. Checking less
+    // than the server does would render a console whose every button
+    // fails; checking more would lock out the person who owns the site.
     const token = await user.getIdTokenResult(true);
-    if (!token.claims.admin) {
-      const alert = $('#signin-form [data-form-alert]');
-      alert.textContent = 'This account does not have administrator access.';
+    let allowed = token.claims.admin === true || token.claims.role === 'owner';
+    if (!allowed) {
+      try {
+        const { app } = await firebase();
+        const { getFirestore, doc, getDoc } =
+          await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+        const snap = await getDoc(doc(getFirestore(app), 'users', user.uid));
+        allowed = snap.exists() && snap.data().role === 'admin';
+      } catch (err) {
+        allowed = false;
+      }
+    }
+    if (!allowed) {
+      const alert = $('#gate [data-form-alert]');
+      alert.textContent = `${user.email} does not have administrator access.`;
       alert.classList.add('show');
       await signOut(auth);
       return;
