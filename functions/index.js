@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 
 import {
   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SENDGRID_API_KEY, UNSUBSCRIBE_SECRET,
-  PORTAL_SERVICE_ACCOUNT, SITE_URL, PORTAL_URL, FROM_EMAIL, REGION, ALLOWED_ORIGINS
+  SITE_URL, PORTAL_URL, FROM_EMAIL, REGION, ALLOWED_ORIGINS
 } from './lib/config.js';
 import { db, auth, FieldValue, signupId, normaliseEmail, classRef, signupsRef, loadClass } from './lib/db.js';
 import {
@@ -75,7 +75,7 @@ export const getClassState = onCall(callOpts, async (request) => {
    no payment. Everything else in the system hangs off this record.
    ════════════════════════════════════════════════════════════ */
 export const submitSignup = onCall(
-  { ...callOpts, secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET, PORTAL_SERVICE_ACCOUNT] },
+  { ...callOpts, secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET] },
   async (request) => {
     const data = request.data || {};
     const slug = clean(data.slug, 80);
@@ -213,7 +213,7 @@ export const submitSignup = onCall(
         ghlSynced: ghlOk,
         // portalProjectId is the tell for a misconfigured portal
         // target. If the portal is a separate Firebase project and
-        // PORTAL_SERVICE_ACCOUNT was never set, this shows this
+        // no portal override was set, this shows this
         // project's id and the account is in the wrong place. The
         // admin console surfaces it for exactly that reason.
         portalCreated: Boolean(portal?.created),
@@ -589,7 +589,7 @@ export const announceClass = onCall(
 export const retryPortalAccounts = onCall(
   {
     ...callOpts,
-    secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET, PORTAL_SERVICE_ACCOUNT],
+    secrets: [SENDGRID_API_KEY, UNSUBSCRIBE_SECRET],
     timeoutSeconds: 540
   },
   async (request) => {

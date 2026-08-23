@@ -3,7 +3,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { randomBytes } from 'node:crypto';
 import { logger } from 'firebase-functions';
-import { PORTAL_SERVICE_ACCOUNT, PORTAL_URL } from './config.js';
+import { PORTAL_URL } from './config.js';
 
 /**
  * Creates member portal accounts as a side effect of class signup.
@@ -42,7 +42,7 @@ let resolved = null;
 export function portalApp() {
   if (resolved) return resolved;
 
-  const raw = PORTAL_SERVICE_ACCOUNT.value();
+  const raw = process.env.PORTAL_SERVICE_ACCOUNT;
   if (!raw) {
     // Expected path. The portal shares this project, so the default
     // app is the right one and its user pool is the portal's.

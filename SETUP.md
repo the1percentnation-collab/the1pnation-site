@@ -102,6 +102,15 @@ firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
 firebase functions:secrets:set SENDGRID_API_KEY
 firebase functions:secrets:set UNSUBSCRIBE_SECRET   # any long random string
 ```
+
+**All four must exist before the first functions deploy.** Firebase checks every
+declared secret at deploy time and fails if one is missing, so a placeholder value
+is better than a missing secret if you do not have the real key yet.
+
+No CLI handy? Each one is a Secret Manager secret with the same name, so you can
+create them at
+<https://console.cloud.google.com/security/secret-manager?project=the-1p-leadership>
+instead.
 `UNSUBSCRIBE_SECRET` signs unsubscribe links. It is separate from the SendGrid
 key so that rotating an email provider key does not break every unsubscribe link
 already sitting in people's inboxes.
@@ -121,8 +130,10 @@ the person a link to set their password.
 this site runs in. One project means one Auth user pool, so the account a class
 signup creates *is* the portal login.
 
-`PORTAL_SERVICE_ACCOUNT` exists only for the other case, a portal in a genuinely
-separate Firebase project. Leave it unset.
+There is no `PORTAL_SERVICE_ACCOUNT` secret to create. It would only matter if a
+portal ever moved to a separate Firebase project, and Firebase fails a deploy when
+a declared secret is missing from Secret Manager, so declaring one that is never
+set would block every deploy.
 
 **The profile shape is matched, not guessed.** The user document written at
 `users/{uid}` mirrors `ensureUserDoc()` in the portal's `public/js/auth.js`:
