@@ -28,6 +28,36 @@
       mask-image: radial-gradient(ellipse 60% 60% at 20% 30%, black 10%, transparent 70%);
       opacity: 0.5;
     }
+    /* ── MATRIX RAIN BACKGROUND ────────────────────────────────
+       Two more fixed layers in the same z-index: 0 band as .hero-grid
+       and the .noise overlay. Both inert; all page content is z-index: 1.
+       Self-contained: this rule block, the two elements below <body>,
+       and the #matrix-bg script at the end of the page. ── */
+    #matrix-rain, #matrix-glow {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    #matrix-rain {
+      /* A canvas is a replaced element: inset alone leaves it at its
+         intrinsic (attribute) size, so it needs an explicit box. */
+      width: 100%; height: 100%;
+      opacity: 0.5;
+      /* Pull the rain to the upper right so it stays off the left-hand
+         reading column. Same idea as .hero-grid's mask above, mirrored. */
+      -webkit-mask-image: radial-gradient(ellipse 65% 75% at 78% 35%, black 15%, transparent 72%);
+      mask-image: radial-gradient(ellipse 65% 75% at 78% 35%, black 15%, transparent 72%);
+    }
+    /* Cursor wash. One transition declaration covering both properties —
+       writing `transition` twice would silently drop the first. */
+    #matrix-glow {
+      background: radial-gradient(600px circle at 50% 50%, rgba(255,30,40,0.18) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.8s ease, background 0.1s linear;
+    }
+    #matrix-glow.active { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      #matrix-glow { transition: none; }
+    }
+
     .hero-strip { padding: 140px 32px 56px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
     .hero-label { margin-bottom: 20px; }
     .hero-title {
@@ -213,6 +243,8 @@
 </head>
 <body class="noise">
 
+<canvas id="matrix-rain" aria-hidden="true"></canvas>
+<div id="matrix-glow"></div>
 <div class="hero-grid"></div>
 
 <!-- ══ NAV ══ -->
@@ -781,6 +813,210 @@
     stateNote.hidden = false;
     form.style.display = 'none';
   }
+</script>
+
+<script id="matrix-bg">
+/* ============================================================
+   RED MATRIX RAIN + CURSOR GLOW
+   Self-contained: pairs with the #matrix-rain / #matrix-glow rules in
+   the page <style> and the two elements at the top of <body>. Deliberately
+   a plain script, not a module — nothing here couples to the enrolment
+   module above.
+============================================================ */
+(function () {
+  var canvas = document.getElementById('matrix-rain');
+  var glowEl = document.getElementById('matrix-glow');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  var GLYPHS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789';
+  var TRAIL = 'rgba(8, 8, 8, 0.09)';  /* --black at low alpha => fading tails */
+  var BASE_ALPHA = 0.20;              /* the rain must never fight the copy */
+  var GLOW_RADIUS = 220;              /* px around the cursor that brighten */
+  var FRAME_MS = 1000 / 30;           /* reads fine at 30fps, costs half */
+  var GLOW_FLOOR = 0.01;              /* below this the cursor effect is off */
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  var cssW = 0, cssH = 0, fontSize = 16, cols = 0;
+  var drops = [], speeds = [], rows = [], chars = [];
+  var rafId = null, lastFrame = 0;
+  var mx = -9999, my = -9999, glow = 0, glowTarget = 0;
+
+  function randGlyph() {
+    return GLYPHS.charAt((Math.random() * GLYPHS.length) | 0);
+  }
+
+  /* Back the canvas with device pixels but draw in CSS pixels, or glyphs
+     come out blurry on retina. The layer is position: fixed, so it is the
+     viewport that sets its size. */
+  function measure() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cssW = canvas.clientWidth || window.innerWidth;
+    cssH = canvas.clientHeight || window.innerHeight;
+    if (!cssW || !cssH) return;
+
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    fontSize = cssW < 720 ? 13 : 16;
+    cols = Math.ceil(cssW / fontSize);
+
+    drops = new Array(cols); speeds = new Array(cols);
+    rows = new Array(cols); chars = new Array(cols);
+    for (var i = 0; i < cols; i++) {
+      drops[i] = Math.random() * -cssH;                     /* stagger starts */
+      speeds[i] = fontSize * (0.35 + Math.random() * 0.55);
+      rows[i] = -1;
+      chars[i] = randGlyph();
+    }
+
+    /* Resizing a canvas resets its context, so re-apply this here. */
+    ctx.font = fontSize + "px 'Space Mono', monospace";
+    ctx.textBaseline = 'top';
+  }
+
+  function boostAt(x, y) {
+    if (glow <= 0) return 0;
+    var dx = x - mx, dy = y - my;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d >= GLOW_RADIUS) return 0;
+    return (1 - d / GLOW_RADIUS) * glow;
+  }
+
+  function draw() {
+    ctx.fillStyle = TRAIL;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    for (var i = 0; i < cols; i++) {
+      var x = i * fontSize;
+      var boost = boostAt(x, drops[i]);
+
+      drops[i] += speeds[i] * (1 + boost * 0.6);    /* faster near the cursor */
+
+      var row = Math.floor(drops[i] / fontSize);
+      var y = row * fontSize;                        /* snap to the row grid */
+
+      if (y > cssH) {
+        drops[i] = -Math.random() * cssH * 0.5 - fontSize;
+        rows[i] = -1;
+        continue;
+      }
+      if (row !== rows[i]) {                         /* re-roll only on step */
+        rows[i] = row;
+        chars[i] = randGlyph();
+      }
+      if (y < -fontSize) continue;
+
+      var a = BASE_ALPHA + boost * 0.75;
+
+      /* One row up in brand red, so the fading column reads red not pink. */
+      if (y >= 0) {
+        ctx.fillStyle = 'rgba(230, 3, 6, ' + (a * 0.7).toFixed(3) + ')';
+        ctx.fillText(chars[i], x, y - fontSize);
+      }
+      /* The head: a hotter ember. */
+      ctx.fillStyle = 'rgba(255, 90, 94, ' + Math.min(1, a * 1.25).toFixed(3) + ')';
+      ctx.fillText(chars[i], x, y);
+    }
+
+    if (glowEl && finePointer.matches) {
+      if (glow > 0) {
+        glowEl.classList.add('active');
+        glowEl.style.background =
+          'radial-gradient(600px circle at ' + mx + 'px ' + my + 'px, ' +
+          'rgba(255,30,40,' + (0.22 * glow).toFixed(3) + ') 0%, ' +
+          'rgba(230,3,6,' + (0.08 * glow).toFixed(3) + ') 35%, transparent 65%)';
+      } else {
+        glowEl.classList.remove('active');
+      }
+    }
+  }
+
+  /* One still frame for visitors who asked for reduced motion. */
+  function drawStatic() {
+    if (!cssW || !cssH) return;
+    ctx.clearRect(0, 0, cssW, cssH);
+    var maxRow = Math.floor(cssH / fontSize);
+    for (var i = 0; i < cols; i++) {
+      var n = 3 + ((Math.random() * 5) | 0);
+      for (var k = 0; k < n; k++) {
+        ctx.fillStyle = 'rgba(230, 3, 6, ' + (0.10 + Math.random() * 0.12).toFixed(3) + ')';
+        ctx.fillText(randGlyph(), i * fontSize, ((Math.random() * maxRow) | 0) * fontSize);
+      }
+    }
+  }
+
+  function frame(ts) {
+    rafId = requestAnimationFrame(frame);
+    if (ts - lastFrame < FRAME_MS) return;
+    lastFrame = ts;
+    /* Ease in gently, release faster, and settle hard at the floor so the
+       wash clears in about a second instead of crawling to zero. */
+    glow += (glowTarget - glow) * (glowTarget > glow ? 0.06 : 0.14);
+    if (glow < GLOW_FLOOR) glow = 0;
+    draw();
+  }
+
+  function start() {
+    if (rafId !== null || reduceMotion.matches || document.hidden) return;
+    lastFrame = 0;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function stop() {
+    if (rafId === null) return;
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  function render() {
+    if (reduceMotion.matches) { stop(); drawStatic(); } else { start(); }
+  }
+
+  measure();
+  render();
+
+  /* Space Mono may land after first paint; re-measure so metrics match. */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      measure();
+      if (reduceMotion.matches) drawStatic();
+    });
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { measure(); render(); }, 150);
+  });
+
+  /* A fixed background is never scrolled off-screen, so a hidden tab is the
+     only case worth cancelling the loop for. */
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stop(); else render();
+  });
+
+  if (reduceMotion.addEventListener) {
+    reduceMotion.addEventListener('change', render);
+  }
+
+  /* Store pointer coordinates only; the wash is painted once per frame in
+     draw(), not on every event. The canvas is fixed, so clientX/clientY are
+     already in its coordinate space. */
+  if (finePointer.matches) {
+    window.addEventListener('pointermove', function (e) {
+      if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      mx = e.clientX;
+      my = e.clientY;
+      glowTarget = 1;
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { glowTarget = 0; });
+  }
+})();
 </script>
 </body>
 </html>
