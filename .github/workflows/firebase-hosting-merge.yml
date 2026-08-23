@@ -19,9 +19,8 @@ jobs:
         with:
           node-version: '20'
 
-      # Functions carry the Stripe, SendGrid, and CRM logic, so a
-      # deploy that shipped only hosting would leave the pages
-      # calling endpoints that no longer match them.
+      # firebase-tools needs the function dependencies present locally
+      # to analyse and package the functions before uploading them.
       - name: Install function dependencies
         working-directory: functions
         run: npm install
