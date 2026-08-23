@@ -194,6 +194,7 @@
     <button class="tab active" data-tab="dashboard">Dashboard</button>
     <button class="tab" data-tab="signups">Signup Sheet</button>
     <button class="tab" data-tab="builder">Class Builder</button>
+    <button class="tab" data-tab="codes">Discount Codes</button>
     <button class="tab" data-tab="send">Send</button>
   </div>
 
@@ -377,14 +378,21 @@
       </div>
     </div>
 
+  </section>
+
+  <!-- ── DISCOUNT CODES ──
+       Its own tab. These used to sit at the bottom of Send, under three
+       mailing cards, where nobody looking for a discount code would think
+       to open them. ── -->
+  <section class="panel" data-panel="codes">
     <div class="card">
-      <h3>ACCESS CODES</h3>
+      <h3>DISCOUNT CODES</h3>
       <p class="card-hint">
-        A code at 100 percent enrols the person directly without a payment, and without the word "free"
-        appearing anywhere on the page, in the checkout, or in their confirmation. The seat keeps its
-        stated value. Codes below 100 percent go through Stripe with the discount applied.
-        Untick Active to switch a code off without deleting it; an expiry date stops the code
-        at the end of that day.
+        Codes for this class. A code at 100 percent enrols the person directly without a payment,
+        and without the word "free" appearing anywhere on the page, in the checkout, or in their
+        confirmation — the seat keeps its stated value. Codes below 100 percent go through Stripe
+        with the discount applied. Untick Active to switch a code off without deleting it; an
+        expiry date stops the code at the end of that day.
       </p>
       <div id="codes-editor"></div>
       <div class="btn-row">
