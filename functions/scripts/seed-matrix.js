@@ -30,38 +30,35 @@ const SLUG = 'social-media-matrix';
    launch, and `timing`, which lets Anthony schedule to real
    demand instead of guessing. ─────────────────────────────── */
 const formFields = [
-  {
-    id: 'platform', type: 'radio', required: true,
-    label: 'Which platform feels most confusing right now?',
-    options: ['Instagram', 'TikTok', 'LinkedIn', 'Facebook', 'YouTube', 'Honestly, all of them']
-  },
-  {
-    id: 'building', type: 'radio', required: false,
-    label: 'What are you building?',
-    options: ['A personal brand', 'A business', 'A coaching practice', 'A nonprofit', 'Still figuring that out']
-  },
-  {
-    id: 'obstacle', type: 'radio', required: false,
-    label: 'What is actually stopping you?',
-    options: [
-      'I do not know where to start',
-      'I do not know what to post',
-      'I post and nothing happens',
-      'I do not have the time',
-      'I am uncomfortable being visible'
-    ]
-  },
-  {
-    id: 'timing', type: 'radio', required: false,
-    label: 'What time works best for you?',
-    options: ['Weekday evenings', 'Weekday mornings', 'Weekend mornings', 'I am flexible']
-  },
-  {
-    id: 'interests', type: 'checkbox', required: false,
-    label: 'What else would you want from The One Percent?',
-    help: 'Pick anything that interests you. This is how I know what to build next.',
-    options: ['Courses', 'Books', 'Masterminds', 'Webinars', 'One on one coaching', 'Team and corporate training']
-  }
+  // Deliberately empty.
+  //
+  // The signup form now asks for first name, last name, email, and
+  // phone and nothing else, because those four are what the member
+  // portal account needs and the shortest possible form converts best.
+  // Those four are rendered by the page itself, not by this schema.
+  //
+  // Anything added here appears as an extra question on the form with
+  // no deploy required. Two are worth considering once signups are
+  // flowing, and both are a single tap:
+  //
+  //   timing    -> which session time the room can actually make, which
+  //                is what tells Anthony when to schedule the class
+  //   interests -> what else they would buy, written to GoHighLevel as
+  //                tags, which is what makes this list pay off on every
+  //                future launch
+  //
+  // Kept here as commented reference rather than deleted, so re-adding
+  // one is a copy and paste into the admin console.
+  //
+  // { id: 'timing', type: 'radio', required: false,
+  //   label: 'What time works best for you?',
+  //   options: ['Weekday evenings', 'Weekday mornings', 'Weekend mornings', 'I am flexible'] },
+  //
+  // { id: 'interests', type: 'checkbox', required: false,
+  //   label: 'What else would you want from The One Percent?',
+  //   help: 'Pick anything that interests you. This is how I know what to build next.',
+  //   options: ['Courses', 'Books', 'Masterminds', 'Webinars', 'One on one coaching',
+  //             'Team and corporate training'] }
 ];
 
 const publicDoc = {
@@ -143,6 +140,22 @@ const publicDoc = {
 
 const privateDoc = {
   ghlFormId: '2RRVTzt8PJABfOAPd84Z',
+
+  // Where and how the member portal profile document is written.
+  // The portal's real schema is not visible from this repo, so if it
+  // expects different collection or field names, change them here
+  // rather than in code.
+  portal: {
+    collection: 'users',
+    fields: {
+      firstName: 'firstName',
+      lastName: 'lastName',
+      email: 'email',
+      phone: 'phone',
+      displayName: 'displayName'
+    }
+  },
+
   // Access codes are the mechanism behind comping a seat without
   // ever using the word "free". A code at 100 percent enrols the
   // person directly and never touches Stripe.

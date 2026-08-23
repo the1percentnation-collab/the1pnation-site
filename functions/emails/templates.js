@@ -11,6 +11,41 @@ import { formatMoney } from '../lib/pricing.js';
 const ctx = (signup, cls) => ({ email: signup.email, slug: cls.slug });
 const firstName = (s) => escapeHtml(s.firstName || 'there');
 
+/* ── 1. WELCOME, AND YOU ARE ON THE LIST ───────────────────
+   Sent the moment someone signs up. It does two jobs at once:
+   confirms the class, and introduces the portal account that was
+   created for them in the background.
+
+   This email is the disclosure. The form is short on purpose and
+   does not walk them through account creation, so this is where
+   they find out the login exists and how to take ownership of it.
+   That is why the set-password link is the primary action rather
+   than a footnote. */
+export function welcomeAndInterest(signup, cls, pricing, setPasswordLink) {
+  const subject = `You're in. Here's your access to ${cls.name}.`;
+  const portalBlock = setPasswordLink
+    ? p(`I've already set up your member portal account under <strong style="color:#fff;">${escapeHtml(signup.email)}</strong>, so there is nothing for you to fill in twice. Choose your password and it's yours.`) +
+      button(setPasswordLink, 'Set My Password') +
+      p(`<span style="color:#A0A0A0;font-size:13px;">That link is good for one hour. If it expires, use "forgot password" on the portal login page and it will send you a fresh one.</span>`)
+    : p(`Your member portal account is set up under <strong style="color:#fff;">${escapeHtml(signup.email)}</strong>. Use "forgot password" on the portal login page to choose your password.`);
+
+  const html = wrap({
+    ...ctx(signup, cls),
+    preheader: 'Your spot is saved and your portal access is ready. The dates come next.',
+    body:
+      h(`You're on the list, ${signup.firstName || 'friend'}.`) +
+      p(`Thanks for raising your hand for <strong style="color:#fff;">${escapeHtml(cls.name)}</strong>. Your spot is saved.`) +
+      p(`Here's what happens next. Once the room is the right size I'll send you the dates, the session times, and everything you need to take your seat. Nothing else is needed from you today.`) +
+      portalBlock +
+      p(`The portal is where the sessions, the workbooks, and the replays live, so getting in now means you're ready before we start rather than five minutes into the first session.`) +
+      p(`One thing that would help. Reply to this email and tell me the single thing about social media that frustrates you most. I read every one, and the answers shape what I teach in the room.`) +
+      p(`Talk soon,<br>Anthony`)
+  });
+  return { subject, html };
+}
+
+/* Kept for classes that do not create a portal account, and as the
+   fallback when account creation failed and Anthony resends. */
 /* ── 1. INTEREST CONFIRMATION ──────────────────────────────
    Sent the moment someone raises their hand. Its only jobs are to
    confirm we have them, set the expectation that the date comes

@@ -205,18 +205,24 @@ ${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
         <div class="form-row">
           <div class="field">
             <label class="field-label" for="firstName">First Name <span class="field-required">*</span></label>
-            <input class="field-input" type="text" id="firstName" name="firstName" autocomplete="given-name" placeholder="Your first name">
+            <input class="field-input" type="text" id="firstName" name="firstName" autocomplete="given-name" placeholder="First name">
             <div class="field-error">Please enter your first name.</div>
           </div>
           <div class="field">
-            <label class="field-label" for="email">Email <span class="field-required">*</span></label>
-            <input class="field-input" type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
-            <div class="field-error">Please enter a valid email address.</div>
+            <label class="field-label" for="lastName">Last Name <span class="field-required">*</span></label>
+            <input class="field-input" type="text" id="lastName" name="lastName" autocomplete="family-name" placeholder="Last name">
+            <div class="field-error">Please enter your last name.</div>
           </div>
         </div>
         <div class="field">
-          <label class="field-label" for="phone">Phone <span class="field-optional">optional</span></label>
-          <input class="field-input" type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+1 (555) 000-0000">
+          <label class="field-label" for="email">Email <span class="field-required">*</span></label>
+          <input class="field-input" type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
+          <div class="field-error">Please enter a valid email address.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="phone">Phone <span class="field-required">*</span></label>
+          <input class="field-input" type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000">
+          <div class="field-error">Please enter a phone number we can reach you on.</div>
         </div>
         <div id="dynamic-fields"></div>
         <div class="consent-block">
@@ -232,6 +238,8 @@ ${cls.painPoint ? `<section class="painpoint"><div class="painpoint-inner">
         <button type="submit" class="btn-submit" data-submit>
           <span data-submit-label>${isFull ? 'Add Me To The Waitlist' : 'Put Me On The List'}</span><span>→</span>
         </button>
+        <p class="form-legal">Your seat and your member portal access are set up together. Check your
+          email to finish setting up your login.</p>
         <p class="form-legal">Your information is protected and never sold. By joining you agree to our
           <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Service</a>.</p>
       </form>

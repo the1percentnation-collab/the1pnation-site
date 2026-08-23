@@ -106,6 +106,37 @@ Non-secret values (site URL, from address, mailing address) live in
 `functions/.env`. **Set `MAILING_ADDRESS` to a real postal address before the
 first send.** CAN-SPAM requires it in every commercial email.
 
+### 3b. Member portal service account
+Signing up for a class now creates a member portal login in the background and
+emails the person a link to set their password.
+
+**This site is Firebase project `the-1p-leadership`. The portal is at
+`the1p-leadership.web.app`, with no hyphen after "the".** Different names means
+almost certainly different projects, each with its own separate user list, so an
+account created here would not work there.
+
+In the **portal's** Firebase project: Project settings, Service accounts,
+Generate new private key. Then paste the whole JSON file into:
+
+```bash
+firebase functions:secrets:set PORTAL_SERVICE_ACCOUNT
+```
+
+If the portal turns out to be a second hosting site inside this same project,
+skip this: leaving the secret unset creates accounts here, which is then correct.
+
+**How to tell whether you got it right.** Sign yourself up on `/matrix`, then open
+`/admin` and look at the Portal and Portal Project columns on the signup sheet.
+Portal should read `created`, and Portal Project should be the project your portal
+actually lives in. If it shows this site's project id and your portal is separate,
+the accounts are landing in the wrong place. Set the secret and use
+**Send, Portal Accounts, Create Missing Accounts** to fix everyone at once.
+
+Also check that the portal profile matches what your portal expects. It is written
+to `users/{uid}` with `firstName`, `lastName`, `email`, `phone`, and `displayName`
+by default. If your portal uses different names, change them in `/admin` under the
+class's private config rather than in code.
+
 ### 4. SendGrid
 Create the API key, then **authenticate your sending domain**. Domain
 authentication matters more than the key itself; unauthenticated mail lands in

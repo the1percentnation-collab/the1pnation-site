@@ -15,6 +15,22 @@ export const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY');
 //   firebase functions:secrets:set UNSUBSCRIBE_SECRET
 export const UNSUBSCRIBE_SECRET = defineSecret('UNSUBSCRIBE_SECRET');
 
+// The whole service account key file for the MEMBER PORTAL Firebase
+// project, so class signup can create logins there.
+//
+// The portal lives at the1p-leadership.web.app while this site is
+// project the-1p-leadership. Those are different names, so they are
+// almost certainly separate projects with separate user pools, and
+// an account created here would not work there.
+//
+// Portal project -> Project settings -> Service accounts -> Generate
+// new private key, then paste the entire JSON file into:
+//   firebase functions:secrets:set PORTAL_SERVICE_ACCOUNT
+//
+// Optional. If unset, accounts are created in this project instead,
+// which is only correct if the portal is a second hosting site here.
+export const PORTAL_SERVICE_ACCOUNT = defineSecret('PORTAL_SERVICE_ACCOUNT');
+
 // Non-secret configuration. Override per environment in .env files
 // or with `firebase functions:config`. Defaults match production.
 export const SITE_URL = defineString('SITE_URL', { default: 'https://the1pnation.com' });

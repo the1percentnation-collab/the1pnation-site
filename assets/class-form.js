@@ -154,6 +154,7 @@ export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }
     clearAlert();
 
     const firstName = form.querySelector('[name="firstName"]')?.value.trim() || '';
+    const lastName = form.querySelector('[name="lastName"]')?.value.trim() || '';
     const email = form.querySelector('[name="email"]')?.value.trim() || '';
     const phone = form.querySelector('[name="phone"]')?.value.trim() || '';
 
@@ -166,7 +167,11 @@ export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }
     };
 
     if (!firstName) markInvalid(form.querySelector('[name="firstName"]'));
+    // Last name and phone are required now: both are part of the
+    // member portal account created from this submission.
+    if (!lastName) markInvalid(form.querySelector('[name="lastName"]'));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) markInvalid(form.querySelector('[name="email"]'));
+    if (phone.replace(/\D/g, '').length < 10) markInvalid(form.querySelector('[name="phone"]'));
 
     const answers = {};
     for (const field of formFields) {
@@ -190,6 +195,7 @@ export function mountClassForm({ slug, mount, form, formFields = [], onSuccess }
       const result = await callFn('submitSignup', {
         slug,
         firstName,
+        lastName,
         email,
         phone,
         answers,
