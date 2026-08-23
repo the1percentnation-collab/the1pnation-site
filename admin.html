@@ -363,6 +363,8 @@
         A code at 100 percent enrols the person directly without a payment, and without the word "free"
         appearing anywhere on the page, in the checkout, or in their confirmation. The seat keeps its
         stated value. Codes below 100 percent go through Stripe with the discount applied.
+        Untick Active to switch a code off without deleting it; an expiry date stops the code
+        at the end of that day.
       </p>
       <div id="codes-editor"></div>
       <div class="btn-row">
@@ -924,8 +926,18 @@
         <div class="field"><label class="field-label">Percent Off</label><input class="field-input" type="number" min="1" max="100" data-c-pct value="${esc(c.percentOff ?? 100)}"></div>
         <div class="field"><label class="field-label">Max Uses</label><input class="field-input" type="number" min="0" data-c-max value="${esc(c.maxRedemptions || 0)}"></div>
       </div>
+      <div class="row-3">
+        <div class="field"><label class="field-label">Expires <span class="field-optional">optional</span></label><input class="field-input" type="date" data-c-exp value="${esc((c.expiresAt || '').slice(0, 10))}"></div>
+        <div class="field"><label class="field-label">Active</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px 2px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" data-c-active ${c.active === false ? '' : 'checked'}>
+            <span>${c.active === false ? 'Off — code is refused' : 'On'}</span>
+          </label>
+        </div>
+        <div class="field"><label class="field-label">Used</label><div style="padding:10px 2px;font-size:13px;color:var(--gray-400);">${esc(c.redemptions || 0)}${Number(c.maxRedemptions) ? ' / ' + esc(c.maxRedemptions) : ''} redemption${Number(c.redemptions || 0) === 1 ? '' : 's'}</div></div>
+      </div>
       <div class="field">
-        <label class="field-label">Note <span class="field-optional">used ${esc(c.redemptions || 0)} times</span></label>
+        <label class="field-label">Note</label>
         <input class="field-input" data-c-note value="${esc(c.note || '')}">
       </div>
     </div>`).join('') || '<p class="empty">No access codes yet.</p>';
@@ -947,7 +959,7 @@
     });
     current.privateData.accessCodes = [
       ...codes,
-      { code: '', percentOff: 100, maxRedemptions: 0, redemptions: 0, active: true }
+      { code: '', percentOff: 100, maxRedemptions: 0, redemptions: 0, active: true, expiresAt: null }
     ];
     renderCodes();
   });
@@ -957,7 +969,12 @@
     percentOff: Number(row.querySelector('[data-c-pct]').value) || 0,
     maxRedemptions: Number(row.querySelector('[data-c-max]').value) || 0,
     note: row.querySelector('[data-c-note]').value.trim(),
-    active: true
+    active: row.querySelector('[data-c-active]').checked,
+    // redeemAccessCode compares Date.now() to this, so store end-of-day —
+    // a code that "expires Aug 30" should still work on Aug 30.
+    expiresAt: row.querySelector('[data-c-exp]').value
+      ? row.querySelector('[data-c-exp]').value + 'T23:59:59'
+      : null
   });
 
   $('#save-codes').addEventListener('click', async () => {

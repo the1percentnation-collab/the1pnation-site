@@ -289,10 +289,10 @@ export const startCheckout = onCall(
       mode: 'payment',
       customer_email: email,
       client_reference_id: `${slug}:${id}`,
-      // Anthony can hand out a percentage code and Stripe applies
-      // it at checkout. Full comps never reach this path; they go
-      // through redeemAccessCode instead.
-      allow_promotion_codes: true,
+      // No allow_promotion_codes here: access codes (redeemAccessCode) are
+      // the one discount channel for classes, validated in Firestore and
+      // recorded on the signup. Stripe-native promo codes would bypass the
+      // per-code limits and leave no trace on the signup sheet.
       line_items: [
         {
           quantity: 1,
@@ -477,6 +477,18 @@ export const stripeWebhook = onRequest(
       }
     });
     if (!seated.ok) logger.error('Seat claim failed after payment', { slug, id, reason: seated.reason });
+
+    // A partial access code reaches Stripe with the discount baked into the
+    // price, so this webhook is the first moment the redemption is certain.
+    // Count it here; the duplicate guard above makes retries safe. (Full
+    // comps never reach Stripe — redeemAccessCode counts those directly.)
+    if (session.metadata?.accessCode) {
+      try {
+        await privateIncrementRedemption(slug, session.metadata.accessCode);
+      } catch (err) {
+        logger.error('Failed to count access-code redemption', { slug, code: session.metadata.accessCode, err });
+      }
+    }
 
     const cls = await loadClass(slug);
     const signup = (await ref.get()).data() || {};
